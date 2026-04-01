@@ -2,41 +2,38 @@ import SwiftUI
 
 struct FollowListView: View {
     @StateObject private var viewModel = FollowsViewModel()
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Group {
-            if viewModel.isLoading && viewModel.broadcasters.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if viewModel.broadcasters.isEmpty {
-                emptyState
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.broadcasters) { broadcaster in
-                            NavigationLink(destination: BroadcasterView(broadcasterId: broadcaster.id)) {
-                                broadcasterRow(broadcaster)
-                            }
-                            .buttonStyle(.plain)
-                            .onAppear {
-                                if broadcaster.id == viewModel.broadcasters.last?.id && viewModel.hasMore {
-                                    Task { await viewModel.loadMore() }
-                                }
-                            }
-                        }
+        ZStack {
+            CrateColors.void.ignoresSafeArea()
 
-                        if viewModel.isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        }
-                    }
-                    .padding()
-                    .padding(.bottom, 80)
-                }
+            if viewModel.isLoading && viewModel.broadcasters.isEmpty {
+                loadingState
+            } else if viewModel.broadcasters.isEmpty {
+                EmptyStateView(
+                    icon: "person.2",
+                    title: "Not Following Anyone",
+                    subtitle: "Follow creators to see their latest shows",
+                    actionTitle: "Discover Creators",
+                    onAction: { dismiss() }
+                )
+            } else {
+                broadcasterList
             }
         }
-        .navigationTitle("Following")
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                crateBackButton { dismiss() }
+            }
+            ToolbarItem(placement: .principal) {
+                Text("FOLLOWING")
+                    .font(.custom("SpaceGrotesk-Medium", size: 11))
+                    .tracking(2)
+                    .foregroundColor(CrateColors.textSecondary)
+            }
+        }
         .refreshable {
             await viewModel.refresh()
         }
@@ -46,58 +43,119 @@ struct FollowListView: View {
         .errorAlert(error: $viewModel.errorMessage)
     }
 
-    private func broadcasterRow(_ broadcaster: Broadcaster) -> some View {
-        HStack(spacing: 12) {
-            AsyncImage(url: URL(string: broadcaster.avatarUrl ?? "")) { image in
-                image.avatarStyle(size: 50)
-            } placeholder: {
-                Circle()
-                    .fill(Color(.systemGray4))
-                    .frame(width: 50, height: 50)
-                    .overlay {
-                        Image(systemName: "person.fill")
-                            .foregroundColor(.white)
+    // MARK: - Broadcaster List
+
+    private var broadcasterList: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.broadcasters) { broadcaster in
+                    NavigationLink(destination: BroadcasterView(broadcasterId: broadcaster.id)) {
+                        creatorRow(broadcaster)
                     }
+                    .buttonStyle(.plain)
+                    .onAppear {
+                        if broadcaster.id == viewModel.broadcasters.last?.id && viewModel.hasMore {
+                            Task { await viewModel.loadMore() }
+                        }
+                    }
+                }
+
+                if viewModel.isLoadingMore {
+                    ProgressView()
+                        .tint(CrateColors.textTertiary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                }
             }
+            .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+            .padding(.top, 8)
+            .padding(.bottom, 100)
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 4) {
+    // MARK: - Creator Row
+
+    private func creatorRow(_ broadcaster: Broadcaster) -> some View {
+        HStack(spacing: 12) {
+            // Avatar
+            AsyncImage(url: URL(string: broadcaster.avatarUrl ?? "")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure, .empty:
+                    ZStack {
+                        CrateColors.elevated
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 16, weight: .light))
+                            .foregroundColor(CrateColors.textTertiary)
+                    }
+                @unknown default:
+                    CrateColors.elevated
+                }
+            }
+            .frame(width: 44, height: 44)
+            .clipShape(Circle())
+            .overlay(
+                Circle()
+                    .stroke(CrateColors.border, lineWidth: 0.5)
+            )
+
+            // Info
+            VStack(alignment: .leading, spacing: 3) {
                 Text(broadcaster.nickname)
-                    .font(.headline)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(CrateColors.textPrimary)
+                    .lineLimit(1)
 
-                Text("\(broadcaster.programCount ?? 0) programs")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("\(broadcaster.programCount ?? 0) shows")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundColor(CrateColors.textTertiary)
             }
 
             Spacer()
 
-            Button {
+            // Unfollow button
+            CrateButton(
+                title: "Following",
+                variant: .secondary,
+                size: .compact
+            ) {
                 Task { await viewModel.unfollow(broadcasterId: broadcaster.id) }
-            } label: {
-                Text("Following")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(.systemGray5))
-                    .cornerRadius(16)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 10)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(CrateColors.borderSubtle)
+                .frame(height: 0.5)
+                .padding(.leading, 56)
+        }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "person.2")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Not following anyone yet")
-                .font(.title3)
-                .foregroundColor(.secondary)
-            Text("Follow broadcasters to see their updates")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+    // MARK: - Loading
+
+    private var loadingState: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<8, id: \.self) { _ in
+                HStack(spacing: 12) {
+                    SkeletonView(cornerRadius: 22)
+                        .frame(width: 44, height: 44)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonView(cornerRadius: 4)
+                            .frame(width: 120, height: 14)
+                        SkeletonView(cornerRadius: 4)
+                            .frame(width: 60, height: 11)
+                    }
+
+                    Spacer()
+                }
+                .padding(.vertical, 10)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+        .padding(.top, 8)
     }
 }

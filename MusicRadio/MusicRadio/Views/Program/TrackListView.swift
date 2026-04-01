@@ -8,18 +8,13 @@ struct TrackListView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Tracks")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                Spacer()
-                Text("\(tracks.count) tracks")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
+            // Section label
+            Text("TRACKS IN THIS SHOW")
+                .crateText(.sectionLabel, color: CrateColors.textTertiary)
+                .crateScreenPadding()
 
-            LazyVStack(spacing: 8) {
+            // Track cards
+            LazyVStack(spacing: 2) {
                 ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
                     TrackRow(
                         track: track,
@@ -32,8 +27,7 @@ struct TrackListView: View {
                     )
                 }
             }
-            .padding(.horizontal)
+            .crateScreenPadding()
         }
-        .padding(.top, 16)
     }
 }

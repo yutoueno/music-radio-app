@@ -10,99 +10,94 @@ struct SignInView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 32) {
-                    // Logo / Header
-                    VStack(spacing: 12) {
-                        Image(systemName: "radio")
-                            .font(.system(size: 64))
-                            .foregroundColor(.accentColor)
+            ZStack {
+                CrateColors.void.ignoresSafeArea()
 
-                        Text("Music Radio")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 80)
 
-                        Text("Listen to radio programs with Apple Music")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.top, 60)
+                        // CRATE logo
+                        crateLogo
 
-                    // Form
-                    VStack(spacing: 16) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Email")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            TextField("your@email.com", text: $viewModel.signInEmail)
-                                .textFieldStyle(.roundedBorder)
-                                .textContentType(.emailAddress)
-                                .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .focused($focusedField, equals: .email)
+                        Spacer().frame(height: 48)
+
+                        // Form
+                        VStack(spacing: 20) {
+                            CrateTextField(
+                                placeholder: "Email",
+                                text: $viewModel.signInEmail,
+                                keyboardType: .emailAddress,
+                                textContentType: .emailAddress,
+                                autocapitalization: .never,
+                                onSubmit: { focusedField = .password }
+                            )
+                            .focused($focusedField, equals: .email)
+
+                            CrateTextField(
+                                placeholder: "Password",
+                                text: $viewModel.signInPassword,
+                                isSecure: true,
+                                textContentType: .password,
+                                onSubmit: { submitSignIn() }
+                            )
+                            .focused($focusedField, equals: .password)
+
+                            // Error
+                            if let error = viewModel.errorMessage {
+                                Text(error)
+                                    .font(.system(size: 12, weight: .regular))
+                                    .foregroundColor(CrateColors.error)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.top, -8)
+                            }
+
+                            CrateButton(
+                                title: "Sign In",
+                                variant: .primary,
+                                isLoading: viewModel.isLoading,
+                                isDisabled: viewModel.signInEmail.isEmpty || viewModel.signInPassword.isEmpty,
+                                fullWidth: true
+                            ) {
+                                submitSignIn()
+                            }
                         }
+                        .padding(.horizontal, 32)
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Password")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            SecureField("Password", text: $viewModel.signInPassword)
-                                .textFieldStyle(.roundedBorder)
-                                .textContentType(.password)
-                                .focused($focusedField, equals: .password)
-                        }
+                        Spacer().frame(height: 28)
 
-                        if let error = viewModel.errorMessage {
-                            Text(error)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
+                        // Forgot password
                         Button {
-                            focusedField = nil
-                            Task { await viewModel.signIn() }
-                        } label: {
-                            Group {
-                                if viewModel.isLoading {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text("Sign In")
-                                }
-                            }
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        .disabled(viewModel.isLoading)
-                    }
-                    .padding(.horizontal, 32)
-
-                    // Links
-                    VStack(spacing: 12) {
-                        Button("Forgot Password?") {
                             viewModel.showPasswordReset = true
+                        } label: {
+                            Text("Forgot password?")
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundColor(CrateColors.textTertiary)
                         }
-                        .font(.subheadline)
 
-                        HStack {
+                        Spacer().frame(height: 48)
+
+                        // Create account
+                        HStack(spacing: 6) {
                             Text("Don't have an account?")
-                                .foregroundColor(.secondary)
-                            Button("Sign Up") {
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundColor(CrateColors.textTertiary)
+
+                            Button {
                                 viewModel.showSignUp = true
+                            } label: {
+                                Text("Create account")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(CrateColors.accent)
                             }
-                            .fontWeight(.semibold)
                         }
-                        .font(.subheadline)
+
+                        Spacer().frame(height: 40)
                     }
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
+            .navigationBarHidden(true)
             .navigationDestination(isPresented: $viewModel.showSignUp) {
                 SignUpView()
                     .environmentObject(viewModel)
@@ -112,5 +107,27 @@ struct SignInView: View {
                     .environmentObject(viewModel)
             }
         }
+    }
+
+    // MARK: - Logo
+
+    private var crateLogo: some View {
+        VStack(spacing: 8) {
+            Text("CRATE")
+                .font(.custom("SpaceGrotesk-Light", size: 28))
+                .tracking(8)
+                .foregroundColor(CrateColors.textPrimary)
+
+            Rectangle()
+                .fill(CrateColors.accent.opacity(0.3))
+                .frame(width: 40, height: 1)
+        }
+    }
+
+    // MARK: - Actions
+
+    private func submitSignIn() {
+        focusedField = nil
+        Task { await viewModel.signIn() }
     }
 }

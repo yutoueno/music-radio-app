@@ -2,48 +2,38 @@ import SwiftUI
 
 struct FavoriteProgramsView: View {
     @StateObject private var viewModel = FavoritesViewModel()
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Group {
-            if viewModel.isLoading && viewModel.programs.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if viewModel.programs.isEmpty {
-                emptyState
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.programs) { program in
-                            NavigationLink(destination: ProgramView(programId: program.id)) {
-                                ProgramCard(program: program, style: .list)
-                            }
-                            .buttonStyle(.plain)
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    Task { await viewModel.removeFavorite(programId: program.id) }
-                                } label: {
-                                    Label("Unfavorite", systemImage: "heart.slash")
-                                }
-                            }
-                            .onAppear {
-                                if program.id == viewModel.programs.last?.id && viewModel.hasMore {
-                                    Task { await viewModel.loadMore() }
-                                }
-                            }
-                        }
+        ZStack {
+            CrateColors.void.ignoresSafeArea()
 
-                        if viewModel.isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        }
-                    }
-                    .padding()
-                    .padding(.bottom, 80)
-                }
+            if viewModel.isLoading && viewModel.programs.isEmpty {
+                loadingState
+            } else if viewModel.programs.isEmpty {
+                EmptyStateView(
+                    icon: "heart",
+                    title: "No Favorites",
+                    subtitle: "Programs you favorite will appear here",
+                    actionTitle: "Browse Programs",
+                    onAction: { dismiss() }
+                )
+            } else {
+                programList
             }
         }
-        .navigationTitle("Favorites")
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                crateBackButton { dismiss() }
+            }
+            ToolbarItem(placement: .principal) {
+                Text("FAVORITES")
+                    .font(.custom("SpaceGrotesk-Medium", size: 11))
+                    .tracking(2)
+                    .foregroundColor(CrateColors.textSecondary)
+            }
+        }
         .refreshable {
             await viewModel.refresh()
         }
@@ -53,18 +43,62 @@ struct FavoriteProgramsView: View {
         .errorAlert(error: $viewModel.errorMessage)
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "heart")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("No favorites yet")
-                .font(.title3)
-                .foregroundColor(.secondary)
-            Text("Programs you favorite will appear here")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+    // MARK: - Program List
+
+    private var programList: some View {
+        List {
+            ForEach(viewModel.programs) { program in
+                NavigationLink(destination: ProgramView(programId: program.id)) {
+                    ProgramCard(program: program)
+                }
+                .listRowBackground(CrateColors.void)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(
+                    top: CrateTheme.Spacing.cardGap / 2,
+                    leading: CrateTheme.Spacing.screenMargin,
+                    bottom: CrateTheme.Spacing.cardGap / 2,
+                    trailing: CrateTheme.Spacing.screenMargin
+                ))
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        Task {
+                            await viewModel.removeFavorite(programId: program.id)
+                        }
+                    } label: {
+                        Label("Unfavorite", systemImage: "heart.slash")
+                    }
+                    .tint(CrateColors.error)
+                }
+                .onAppear {
+                    if program.id == viewModel.programs.last?.id && viewModel.hasMore {
+                        Task { await viewModel.loadMore() }
+                    }
+                }
+            }
+
+            if viewModel.isLoadingMore {
+                ProgressView()
+                    .tint(CrateColors.textTertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .listRowBackground(CrateColors.void)
+                    .listRowSeparator(.hidden)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+    }
+
+    // MARK: - Loading
+
+    private var loadingState: some View {
+        VStack(spacing: 12) {
+            ForEach(0..<5, id: \.self) { _ in
+                SkeletonView(cornerRadius: CrateTheme.CornerRadius.large)
+                    .frame(height: 76)
+            }
+        }
+        .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+        .padding(.top, 8)
     }
 }

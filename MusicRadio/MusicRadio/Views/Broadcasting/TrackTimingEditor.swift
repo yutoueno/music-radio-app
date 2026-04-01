@@ -11,7 +11,7 @@ struct TrackTimingEditor: View {
     @State private var showTimingPicker = false
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             HStack(spacing: 12) {
                 // Track artwork
                 AsyncImage(url: URL(string: track.artworkUrl ?? "")) { image in
@@ -20,73 +20,85 @@ struct TrackTimingEditor: View {
                         .scaledToFill()
                 } placeholder: {
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(.systemGray5))
+                        .fill(CrateColors.elevated)
                         .overlay {
                             Image(systemName: "music.note")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 12))
+                                .foregroundColor(CrateColors.textTertiary)
                         }
                 }
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
                     Text(track.trackName)
-                        .font(.subheadline)
+                        .crateText(.body)
                         .lineLimit(1)
+
                     Text(track.artistName)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .crateText(.caption, color: CrateColors.textSecondary)
                         .lineLimit(1)
                 }
 
                 Spacer()
 
-                Button(role: .destructive, action: onDelete) {
+                // Delete button
+                Button(action: onDelete) {
                     Image(systemName: "trash")
-                        .font(.caption)
+                        .font(.system(size: 14))
+                        .foregroundColor(CrateColors.error)
+                        .frame(width: 32, height: 32)
                 }
+                .buttonStyle(.plain)
             }
 
-            // Timing editor
+            // Timing row
             HStack {
                 Image(systemName: "clock")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+                    .foregroundColor(CrateColors.textTertiary)
 
                 Text("Play at:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .crateText(.caption, color: CrateColors.textSecondary)
 
                 Button {
                     showTimingPicker.toggle()
                 } label: {
                     Text(TimeInterval(track.playTimingSeconds).formattedTimingHHMMSS)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .monospacedDigit()
+                        .crateText(.timestamp)
                         .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(6)
+                        .padding(.vertical, 5)
+                        .background(CrateColors.elevated)
+                        .cornerRadius(CrateTheme.CornerRadius.small)
                 }
+                .buttonStyle(.plain)
 
                 Spacer()
 
                 Text("#\(index + 1)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .crateText(.meta, color: CrateColors.textTertiary)
             }
 
+            // Expandable timing picker
             if showTimingPicker {
                 timingPickerView
+                    .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
             }
         }
-        .padding(.vertical, 4)
+        .padding(CrateTheme.Spacing.cardPadding)
+        .background(CrateColors.surface)
+        .cornerRadius(CrateTheme.CornerRadius.large)
+        .overlay(
+            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.large)
+                .stroke(CrateColors.border, lineWidth: 0.5)
+        )
+        .animation(CrateTheme.Animation.standard, value: showTimingPicker)
         .onAppear {
             updateTimingComponents()
         }
     }
+
+    // MARK: - Timing Picker
 
     @ViewBuilder
     private var timingPickerView: some View {
@@ -94,39 +106,38 @@ struct TrackTimingEditor: View {
             HStack(spacing: 4) {
                 timingField(label: "H", value: $hours, range: 0...23)
                 Text(":")
-                    .font(.title3)
-                    .fontWeight(.medium)
+                    .crateText(.h2, color: CrateColors.textTertiary)
                 timingField(label: "M", value: $minutes, range: 0...59)
                 Text(":")
-                    .font(.title3)
-                    .fontWeight(.medium)
+                    .crateText(.h2, color: CrateColors.textTertiary)
                 timingField(label: "S", value: $seconds, range: 0...59)
             }
 
-            Button("Apply") {
+            CrateButton(
+                title: "Apply",
+                variant: .primary,
+                size: .compact
+            ) {
                 track.playTimingSeconds = hours * 3600 + minutes * 60 + seconds
                 showTimingPicker = false
             }
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundColor(.accentColor)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .padding(CrateTheme.Spacing.cardPadding)
+        .background(CrateColors.elevated)
+        .cornerRadius(CrateTheme.CornerRadius.medium)
     }
 
     private func timingField(label: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+                .crateText(.meta, color: CrateColors.textTertiary)
+
             Picker(label, selection: value) {
                 ForEach(range, id: \.self) { num in
                     Text(String(format: "%02d", num))
                         .tag(num)
                         .monospacedDigit()
+                        .foregroundColor(CrateColors.textPrimary)
                 }
             }
             .pickerStyle(.wheel)

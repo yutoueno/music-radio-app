@@ -7,45 +7,59 @@ struct BroadcasterProgramList: View {
     let onLoadMore: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Programs")
-                .font(.title3)
-                .fontWeight(.semibold)
-                .padding(.horizontal)
+        if programs.isEmpty {
+            // Empty state
+            VStack(spacing: CrateTheme.Spacing.inline) {
+                Image(systemName: "radio")
+                    .font(.system(size: 32))
+                    .foregroundColor(CrateColors.textTertiary)
 
-            if programs.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "radio")
-                        .font(.system(size: 36))
-                        .foregroundColor(.secondary)
-                    Text("No programs yet")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 150)
-            } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(programs) { program in
-                        NavigationLink(destination: ProgramView(programId: program.id)) {
-                            ProgramCard(program: program, style: .list)
-                        }
-                        .buttonStyle(.plain)
-                        .onAppear {
-                            if program.id == programs.last?.id && hasMore {
-                                onLoadMore()
-                            }
+                Text("No shows yet")
+                    .crateText(.caption, color: CrateColors.textTertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 150)
+        } else {
+            LazyVStack(spacing: CrateTheme.Spacing.cardGap) {
+                ForEach(programs) { program in
+                    NavigationLink(destination: ProgramView(programId: program.id)) {
+                        ProgramCard(
+                            program: program,
+                            onTap: nil,
+                            onPlay: nil,
+                            isPlaying: false
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .onAppear {
+                        if program.id == programs.last?.id && hasMore {
+                            onLoadMore()
                         }
                     }
-
-                    if isLoadingMore {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
                 }
-                .padding(.horizontal)
+
+                if isLoadingMore {
+                    ProgressView()
+                        .tint(CrateColors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, CrateTheme.Spacing.cardPadding)
+                }
             }
         }
     }
+}
+
+// MARK: - Preview
+
+#Preview {
+    ScrollView {
+        BroadcasterProgramList(
+            programs: [.preview],
+            isLoadingMore: false,
+            hasMore: false,
+            onLoadMore: {}
+        )
+        .crateScreenPadding()
+    }
+    .background(CrateColors.void)
 }

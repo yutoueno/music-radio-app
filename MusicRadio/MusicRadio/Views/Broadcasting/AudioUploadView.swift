@@ -6,76 +6,18 @@ struct AudioUploadView: View {
     @State private var showFilePicker = false
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: CrateTheme.Spacing.cardGap) {
             if let fileName = viewModel.audioFileName {
-                // File selected
-                HStack(spacing: 12) {
-                    Image(systemName: "waveform.circle.fill")
-                        .font(.title)
-                        .foregroundColor(.accentColor)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(fileName)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-
-                        if let data = viewModel.audioFileData {
-                            Text(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-
-                    Spacer()
-
-                    Button {
-                        viewModel.audioFileData = nil
-                        viewModel.audioFileName = nil
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
+                // File selected state
+                fileInfoCard(fileName: fileName)
 
                 // Upload progress
                 if viewModel.isUploading {
-                    VStack(spacing: 8) {
-                        ProgressView(value: viewModel.uploadProgress)
-                            .tint(.accentColor)
-                        Text("\(Int(viewModel.uploadProgress * 100))% uploaded")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                    uploadProgressView
                 }
             } else {
-                // No file selected
-                Button {
-                    showFilePicker = true
-                } label: {
-                    VStack(spacing: 12) {
-                        Image(systemName: "arrow.up.doc.fill")
-                            .font(.system(size: 36))
-                            .foregroundColor(.accentColor)
-
-                        Text("Select Audio File")
-                            .font(.headline)
-                            .foregroundColor(.accentColor)
-
-                        Text("MP3, M4A, WAV, FLAC")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.accentColor.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [8]))
-                    )
-                }
+                // Empty upload area
+                uploadDropZone
             }
         }
         .fileImporter(
@@ -92,12 +34,96 @@ struct AudioUploadView: View {
         }
     }
 
+    // MARK: - Upload Drop Zone
+
+    private var uploadDropZone: some View {
+        Button {
+            showFilePicker = true
+        } label: {
+            VStack(spacing: 16) {
+                Image(systemName: "arrow.up.circle")
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundColor(CrateColors.accent)
+
+                VStack(spacing: CrateTheme.Spacing.textGapSmall) {
+                    Text("Select Audio File")
+                        .crateText(.h2)
+
+                    Text("MP3, M4A, WAV, FLAC")
+                        .crateText(.caption, color: CrateColors.textSecondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 40)
+            .background(CrateColors.elevated)
+            .cornerRadius(CrateTheme.CornerRadius.large)
+            .overlay(
+                RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.large)
+                    .strokeBorder(
+                        Color(red: 51/255, green: 51/255, blue: 51/255),
+                        style: StrokeStyle(lineWidth: 1.5, dash: [8, 6])
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - File Info Card
+
+    private func fileInfoCard(fileName: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "waveform.circle.fill")
+                .font(.system(size: 28))
+                .foregroundColor(CrateColors.accent)
+
+            VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
+                Text(fileName)
+                    .crateText(.body)
+                    .lineLimit(1)
+
+                if let data = viewModel.audioFileData {
+                    Text(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))
+                        .crateText(.caption, color: CrateColors.textSecondary)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                viewModel.audioFileData = nil
+                viewModel.audioFileName = nil
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(CrateColors.textTertiary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(CrateTheme.Spacing.cardPadding)
+        .background(CrateColors.elevated)
+        .cornerRadius(CrateTheme.CornerRadius.medium)
+    }
+
+    // MARK: - Upload Progress
+
+    private var uploadProgressView: some View {
+        VStack(spacing: CrateTheme.Spacing.inline) {
+            CrateProgressBar(progress: viewModel.uploadProgress)
+                .frame(height: 3)
+
+            Text("\(Int(viewModel.uploadProgress * 100))% uploaded")
+                .crateText(.caption, color: CrateColors.textSecondary)
+        }
+        .padding(.horizontal, 4)
+    }
+
+    // MARK: - File Selection
+
     private func handleFileSelection(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
             guard let url = urls.first else { return }
 
-            // Start accessing security-scoped resource
             guard url.startAccessingSecurityScopedResource() else { return }
             defer { url.stopAccessingSecurityScopedResource() }
 

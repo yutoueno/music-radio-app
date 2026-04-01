@@ -8,15 +8,17 @@ struct DebugPoCTestView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: CrateTheme.Spacing.sectionGap) {
                 headerSection
                 statusSection
                 inputSection
                 controlsSection
                 logSection
             }
-            .padding()
+            .padding(CrateTheme.Spacing.screenMargin)
+            .padding(.bottom, 40)
         }
+        .background(CrateColors.void)
         .navigationTitle("PoC Test")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -24,26 +26,28 @@ struct DebugPoCTestView: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: CrateTheme.Spacing.textGapMedium) {
             Image(systemName: "waveform.circle")
-                .font(.system(size: 48))
-                .foregroundColor(.accentColor)
+                .font(.system(size: 48, weight: .thin))
+                .foregroundColor(CrateColors.accent)
+
             Text("Dual Playback PoC")
-                .font(.title2)
-                .fontWeight(.bold)
+                .crateText(.h1)
+
             Text("Test simultaneous AVAudioPlayer + MusicKit playback")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .crateText(.caption, color: CrateColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
+        .padding(.top, 8)
     }
 
     // MARK: - Status
 
     private var statusSection: some View {
-        VStack(spacing: 12) {
-            Text("Playback Status")
-                .font(.headline)
+        VStack(spacing: 14) {
+            Text("PLAYBACK STATUS")
+                .crateText(.sectionLabel, color: CrateColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 20) {
                 statusIndicator(
@@ -58,51 +62,50 @@ struct DebugPoCTestView: View {
                 )
             }
 
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("State")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            HStack(spacing: CrateTheme.Spacing.screenMargin) {
+                VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
+                    Text("STATE")
+                        .crateText(.meta, color: CrateColors.textTertiary)
                     Text(playbackStateText)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .crateText(.body)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Radio Time")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                VStack(alignment: .trailing, spacing: CrateTheme.Spacing.textGapSmall) {
+                    Text("RADIO TIME")
+                        .crateText(.meta, color: CrateColors.textTertiary)
                     Text(coordinator.currentRadioTime.formattedDuration)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .monospacedDigit()
+                        .font(CrateTypography.timestamp)
+                        .foregroundColor(CrateColors.accent)
                 }
             }
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .padding(CrateTheme.Spacing.cardPadding)
+        .background(CrateColors.surface)
+        .cornerRadius(CrateTheme.CornerRadius.medium)
+        .overlay(
+            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.medium)
+                .stroke(CrateColors.border, lineWidth: 0.5)
+        )
     }
 
     private func statusIndicator(title: String, isActive: Bool, iconName: String) -> some View {
-        VStack(spacing: 6) {
+        VStack(spacing: CrateTheme.Spacing.textGapMedium) {
             ZStack {
                 Circle()
-                    .fill(isActive ? Color.green.opacity(0.2) : Color(.systemGray5))
+                    .fill(isActive ? CrateColors.success.opacity(0.15) : CrateColors.elevated)
                     .frame(width: 56, height: 56)
                 Image(systemName: iconName)
                     .font(.title2)
-                    .foregroundColor(isActive ? .green : .secondary)
+                    .foregroundColor(isActive ? CrateColors.success : CrateColors.textTertiary)
             }
+
             Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .crateText(.caption, color: CrateColors.textSecondary)
+
             Text(isActive ? "Playing" : "Stopped")
-                .font(.caption2)
-                .fontWeight(.medium)
-                .foregroundColor(isActive ? .green : .secondary)
+                .crateText(.meta, color: isActive ? CrateColors.success : CrateColors.textTertiary)
         }
     }
 
@@ -119,30 +122,54 @@ struct DebugPoCTestView: View {
     // MARK: - Input
 
     private var inputSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Test Configuration")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("TEST CONFIGURATION")
+                .crateText(.sectionLabel, color: CrateColors.textSecondary)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
                 Text("Audio URL (radio stream)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                TextField("https://example.com/audio.mp3", text: $testAudioURL)
-                    .textFieldStyle(.roundedBorder)
+                    .crateText(.meta, color: CrateColors.textTertiary)
+                TextField("", text: $testAudioURL)
+                    .font(CrateTypography.caption)
+                    .foregroundColor(CrateColors.textPrimary)
+                    .placeholder(when: testAudioURL.isEmpty) {
+                        Text("https://example.com/audio.mp3")
+                            .font(CrateTypography.caption)
+                            .foregroundColor(CrateColors.textMuted)
+                    }
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
-                    .font(.subheadline)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(CrateColors.elevated)
+                    .cornerRadius(CrateTheme.CornerRadius.small)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                            .stroke(CrateColors.border, lineWidth: 0.5)
+                    )
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
                 Text("Apple Music Track ID")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                TextField("e.g. 1440818839", text: $testAppleMusicTrackId)
-                    .textFieldStyle(.roundedBorder)
+                    .crateText(.meta, color: CrateColors.textTertiary)
+                TextField("", text: $testAppleMusicTrackId)
+                    .font(CrateTypography.caption)
+                    .foregroundColor(CrateColors.textPrimary)
+                    .placeholder(when: testAppleMusicTrackId.isEmpty) {
+                        Text("e.g. 1440818839")
+                            .font(CrateTypography.caption)
+                            .foregroundColor(CrateColors.textMuted)
+                    }
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
-                    .font(.subheadline)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(CrateColors.elevated)
+                    .cornerRadius(CrateTheme.CornerRadius.small)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                            .stroke(CrateColors.border, lineWidth: 0.5)
+                    )
             }
         }
     }
@@ -151,32 +178,40 @@ struct DebugPoCTestView: View {
 
     private var controlsSection: some View {
         VStack(spacing: 12) {
-            Text("Controls")
-                .font(.headline)
+            Text("CONTROLS")
+                .crateText(.sectionLabel, color: CrateColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             // Start dual playback
             Button {
                 Task { await startDualPlayback() }
             } label: {
                 Label("Start Dual Playback", systemImage: "play.circle.fill")
-                    .font(.headline)
+                    .font(CrateTypography.h2)
+                    .foregroundColor(CrateColors.void)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .padding(.vertical, 14)
+                    .background(CrateColors.accent)
+                    .cornerRadius(CrateTheme.CornerRadius.medium)
             }
+            .buttonStyle(.plain)
 
-            HStack(spacing: 12) {
+            HStack(spacing: CrateTheme.Spacing.cardGap) {
                 Button {
                     coordinator.togglePlayPause()
                     addLog("Toggle play/pause -> \(playbackStateText)")
                 } label: {
                     Label("Toggle", systemImage: "playpause.fill")
+                        .font(CrateTypography.caption)
+                        .foregroundColor(CrateColors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
+                        .background(CrateColors.elevated)
+                        .cornerRadius(CrateTheme.CornerRadius.small)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                                .stroke(CrateColors.border, lineWidth: 0.5)
+                        )
                 }
 
                 Button {
@@ -184,37 +219,53 @@ struct DebugPoCTestView: View {
                     addLog("Stopped all playback")
                 } label: {
                     Label("Stop All", systemImage: "stop.fill")
+                        .font(CrateTypography.caption)
+                        .foregroundColor(CrateColors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
+                        .background(CrateColors.elevated)
+                        .cornerRadius(CrateTheme.CornerRadius.small)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                                .stroke(CrateColors.border, lineWidth: 0.5)
+                        )
                 }
             }
-            .font(.subheadline)
             .buttonStyle(.plain)
 
-            HStack(spacing: 12) {
+            HStack(spacing: CrateTheme.Spacing.cardGap) {
                 Button {
                     Task { await playAppleMusicOnly() }
                 } label: {
                     Text("Music Only")
+                        .font(CrateTypography.caption)
+                        .foregroundColor(CrateColors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
+                        .background(CrateColors.elevated)
+                        .cornerRadius(CrateTheme.CornerRadius.small)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                                .stroke(CrateColors.border, lineWidth: 0.5)
+                        )
                 }
 
                 Button {
                     Task { await playRadioOnly() }
                 } label: {
                     Text("Radio Only")
+                        .font(CrateTypography.caption)
+                        .foregroundColor(CrateColors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
+                        .background(CrateColors.elevated)
+                        .cornerRadius(CrateTheme.CornerRadius.small)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                                .stroke(CrateColors.border, lineWidth: 0.5)
+                        )
                 }
             }
-            .font(.subheadline)
             .buttonStyle(.plain)
         }
     }
@@ -222,35 +273,40 @@ struct DebugPoCTestView: View {
     // MARK: - Log
 
     private var logSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: CrateTheme.Spacing.inline) {
             HStack {
-                Text("Log")
-                    .font(.headline)
+                Text("LOG")
+                    .crateText(.sectionLabel, color: CrateColors.textSecondary)
                 Spacer()
                 Button("Clear") {
                     logMessages.removeAll()
                 }
-                .font(.caption)
+                .font(CrateTypography.meta)
+                .foregroundColor(CrateColors.accent)
+                .buttonStyle(.plain)
             }
 
             if logMessages.isEmpty {
                 Text("No log entries yet")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .crateText(.caption, color: CrateColors.textTertiary)
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.vertical, 20)
             } else {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
                     ForEach(logMessages.indices, id: \.self) { index in
                         Text(logMessages[index])
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(CrateTypography.timestamp)
+                            .foregroundColor(CrateColors.textSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .padding(CrateTheme.Spacing.cardPadding)
+                .background(CrateColors.surface)
+                .cornerRadius(CrateTheme.CornerRadius.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small)
+                        .stroke(CrateColors.border, lineWidth: 0.5)
+                )
             }
         }
     }

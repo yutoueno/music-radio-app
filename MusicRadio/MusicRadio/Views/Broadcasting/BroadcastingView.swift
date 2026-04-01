@@ -6,79 +6,71 @@ struct BroadcastingView: View {
     @State private var showRecording = false
 
     var body: some View {
-        VStack {
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                VStack(spacing: 32) {
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.accentColor)
+        ScrollView {
+            VStack(alignment: .leading, spacing: CrateTheme.Spacing.sectionGap) {
+                // Header
+                Text("PUBLISH")
+                    .crateText(.h1)
+                    .tracking(CrateTypography.sectionTracking)
+                    .padding(.top, 8)
 
-                    VStack(spacing: 8) {
-                        Text("Start Broadcasting")
-                            .font(.title2)
-                            .fontWeight(.bold)
-
-                        Text("Create your own radio program and share it with the world")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 32)
-                    }
-
-                    Button {
+                // Action Cards Grid
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: CrateTheme.Spacing.cardGap),
+                        GridItem(.flexible(), spacing: CrateTheme.Spacing.cardGap)
+                    ],
+                    spacing: CrateTheme.Spacing.cardGap
+                ) {
+                    // New Show
+                    PublishActionCard(
+                        icon: "plus.circle",
+                        title: "New Show",
+                        subtitle: "Create a new program"
+                    ) {
                         showCreateProgram = true
-                    } label: {
-                        Label("Create New Program", systemImage: "plus.circle.fill")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
                     }
-                    .padding(.horizontal, 32)
 
-                    Button {
+                    // Record Audio
+                    PublishActionCard(
+                        icon: "mic",
+                        title: "Record Audio",
+                        subtitle: "Record your voice"
+                    ) {
                         showRecording = true
+                    }
+
+                    // My Shows
+                    NavigationLink {
+                        MyProgramsView()
                     } label: {
-                        Label("Record Audio", systemImage: "record.circle")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red.opacity(0.85))
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                        PublishActionCardContent(
+                            icon: "list.bullet.rectangle",
+                            title: "My Shows",
+                            subtitle: "Manage programs"
+                        )
                     }
-                    .padding(.horizontal, 32)
+                    .buttonStyle(.plain)
 
-                    NavigationLink(destination: MyProgramsView()) {
-                        Label("My Programs", systemImage: "list.bullet")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .foregroundColor(.primary)
-                            .cornerRadius(12)
+                    // Analytics
+                    NavigationLink {
+                        BroadcasterAnalyticsView()
+                    } label: {
+                        PublishActionCardContent(
+                            icon: "chart.bar",
+                            title: "Analytics",
+                            subtitle: "View statistics"
+                        )
                     }
-                    .padding(.horizontal, 32)
-
-                    NavigationLink(destination: BroadcasterAnalyticsView()) {
-                        Label("Analytics", systemImage: "chart.bar.fill")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .foregroundColor(.primary)
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal, 32)
+                    .buttonStyle(.plain)
                 }
+
+                Spacer(minLength: 100)
             }
+            .crateScreenPadding()
         }
-        .navigationTitle("Broadcasting")
+        .background(CrateColors.void.ignoresSafeArea())
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showCreateProgram) {
             NavigationStack {
                 ProgramEditView()
@@ -89,5 +81,56 @@ struct BroadcastingView: View {
                 RecordingView()
             }
         }
+    }
+}
+
+// MARK: - Publish Action Card (Button)
+
+private struct PublishActionCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            PublishActionCardContent(icon: icon, title: title, subtitle: subtitle)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Publish Action Card Content
+
+private struct PublishActionCardContent: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapMedium) {
+            Image(systemName: icon)
+                .font(.system(size: 24, weight: .light))
+                .foregroundColor(CrateColors.accent)
+                .frame(width: 40, height: 40)
+                .background(CrateColors.accentGlow)
+                .clipShape(RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.small))
+
+            VStack(alignment: .leading, spacing: CrateTheme.Spacing.textGapSmall) {
+                Text(title)
+                    .crateText(.h2)
+
+                Text(subtitle)
+                    .crateText(.caption, color: CrateColors.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(CrateTheme.Spacing.cardPadding + 4)
+        .background(CrateColors.surface)
+        .cornerRadius(CrateTheme.CornerRadius.large)
+        .overlay(
+            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.large)
+                .stroke(CrateColors.border, lineWidth: 0.5)
+        )
     }
 }

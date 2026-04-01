@@ -5,6 +5,9 @@ struct SearchView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header
+            searchHeader
+
             // Search bar
             searchBar
 
@@ -14,28 +17,51 @@ struct SearchView: View {
             // Sort options
             sortBar
 
-            Divider()
+            // Separator
+            Rectangle()
+                .fill(CrateColors.border)
+                .frame(height: 0.5)
 
             // Results
             resultsContent
         }
-        .navigationTitle("Search")
-        .navigationBarTitleDisplayMode(.large)
+        .background(CrateColors.void)
+        .navigationBarHidden(true)
         .onFirstAppear {
             await viewModel.search()
         }
         .errorAlert(error: $viewModel.errorMessage)
     }
 
+    // MARK: - Header
+
+    private var searchHeader: some View {
+        HStack {
+            Text("SEARCH")
+                .crateText(.sectionLabel, color: CrateColors.textSecondary)
+            Spacer()
+        }
+        .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+    }
+
     // MARK: - Search Bar
 
     private var searchBar: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: CrateTheme.Spacing.inline) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(CrateColors.textTertiary)
 
-            TextField("Search programs...", text: $viewModel.searchText)
-                .textFieldStyle(.plain)
+            TextField("", text: $viewModel.searchText)
+                .font(CrateTypography.body)
+                .foregroundColor(CrateColors.textPrimary)
+                .placeholder(when: viewModel.searchText.isEmpty) {
+                    Text("Search programs...")
+                        .font(CrateTypography.body)
+                        .foregroundColor(CrateColors.textMuted)
+                }
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
 
@@ -44,29 +70,34 @@ struct SearchView: View {
                     viewModel.searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 16))
+                        .foregroundColor(CrateColors.textTertiary)
                 }
             }
         }
-        .padding(10)
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
-        .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(CrateColors.elevated)
+        .cornerRadius(CrateTheme.CornerRadius.medium)
+        .overlay(
+            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.medium)
+                .stroke(CrateColors.border, lineWidth: 0.5)
+        )
+        .padding(.horizontal, CrateTheme.Spacing.screenMargin)
     }
 
     // MARK: - Genre Chips
 
     private var genreChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 8) {
+            LazyHStack(spacing: CrateTheme.Spacing.inline) {
                 ForEach(viewModel.genres) { genre in
                     genreChip(genre)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, CrateTheme.Spacing.screenMargin)
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
     }
 
     private func genreChip(_ genre: SearchViewModel.Genre) -> some View {
@@ -77,15 +108,22 @@ struct SearchView: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: genre.iconName)
-                    .font(.caption2)
+                    .font(.system(size: 10, weight: .medium))
                 Text(genre.name)
-                    .font(.subheadline)
+                    .font(CrateTypography.caption)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(isSelected ? Color.accentColor : Color(.systemGray6))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(16)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(isSelected ? CrateColors.accent : Color.clear)
+            .foregroundColor(isSelected ? CrateColors.void : CrateColors.textSecondary)
+            .cornerRadius(CrateTheme.CornerRadius.pill)
+            .overlay(
+                RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.pill)
+                    .stroke(
+                        isSelected ? Color.clear : CrateColors.border,
+                        lineWidth: 1
+                    )
+            )
         }
         .buttonStyle(.plain)
     }
@@ -93,15 +131,21 @@ struct SearchView: View {
     // MARK: - Sort Bar
 
     private var sortBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 0) {
             ForEach(SearchViewModel.SortOption.allCases, id: \.self) { option in
                 Button {
                     viewModel.selectSort(option)
                 } label: {
                     Text(option.displayName)
-                        .font(.subheadline)
-                        .fontWeight(viewModel.sortBy == option ? .semibold : .regular)
-                        .foregroundColor(viewModel.sortBy == option ? .accentColor : .secondary)
+                        .font(CrateTypography.meta)
+                        .tracking(CrateTypography.captionTracking)
+                        .foregroundColor(
+                            viewModel.sortBy == option
+                                ? CrateColors.accent
+                                : CrateColors.textTertiary
+                        )
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
                 }
                 .buttonStyle(.plain)
             }
@@ -109,11 +153,11 @@ struct SearchView: View {
             Spacer()
 
             Text("\(viewModel.programs.count) results")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(CrateTypography.timestamp)
+                .foregroundColor(CrateColors.textMuted)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+        .padding(.vertical, 4)
     }
 
     // MARK: - Results
@@ -121,16 +165,28 @@ struct SearchView: View {
     @ViewBuilder
     private var resultsContent: some View {
         if viewModel.isLoading && viewModel.programs.isEmpty {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Skeleton loading
+            ScrollView {
+                LazyVStack(spacing: CrateTheme.Spacing.cardGap) {
+                    ForEach(0..<6, id: \.self) { _ in
+                        SkeletonProgramCard()
+                    }
+                }
+                .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+                .padding(.top, CrateTheme.Spacing.screenMargin)
+            }
         } else if viewModel.programs.isEmpty {
-            emptyState
+            EmptyStateView(
+                icon: "magnifyingglass",
+                title: "No Programs Found",
+                subtitle: "Try different keywords or filters"
+            )
         } else {
             ScrollView {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: CrateTheme.Spacing.cardGap) {
                     ForEach(viewModel.programs) { program in
                         NavigationLink(destination: ProgramView(programId: program.id)) {
-                            ProgramCard(program: program, style: .list)
+                            ProgramCard(program: program)
                         }
                         .buttonStyle(.plain)
                         .onAppear {
@@ -141,32 +197,34 @@ struct SearchView: View {
                     }
 
                     if viewModel.isLoadingMore {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding()
+                        HStack(spacing: CrateTheme.Spacing.inline) {
+                            SkeletonProgramCard()
+                        }
                     }
                 }
-                .padding()
-                .padding(.bottom, 80)
+                .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+                .padding(.top, CrateTheme.Spacing.screenMargin)
+                .padding(.bottom, 100)
             }
             .refreshable {
                 await viewModel.refresh()
             }
         }
     }
+}
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("No programs found")
-                .font(.title3)
-                .foregroundColor(.secondary)
-            Text("Try different keywords or filters")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+// MARK: - Placeholder Modifier
+
+extension View {
+    @ViewBuilder
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content
+    ) -> some View {
+        ZStack(alignment: alignment) {
+            placeholder().opacity(shouldShow ? 1 : 0)
+            self
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

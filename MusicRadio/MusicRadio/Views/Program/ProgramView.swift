@@ -5,124 +5,146 @@ struct ProgramView: View {
 
     @EnvironmentObject var programViewModel: ProgramViewModel
     @EnvironmentObject var coordinator: DualPlaybackCoordinator
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        ScrollView {
-            if programViewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 300)
-            } else if let program = programViewModel.currentProgram {
-                VStack(spacing: 0) {
-                    programHeader(program)
-                    waveformSection
-                    controlsBar(program)
-                    trackListSection
-                }
-                .padding(.bottom, 100)
-            } else if let error = programViewModel.errorMessage {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
-                    Text(error)
-                        .foregroundColor(.secondary)
-                    Button("Retry") {
-                        Task { await programViewModel.loadProgram(id: programId) }
+        ZStack {
+            CrateColors.void.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                if programViewModel.isLoading {
+                    loadingState
+                } else if let program = programViewModel.currentProgram {
+                    VStack(spacing: 0) {
+                        // Custom navigation bar
+                        customNavBar(program)
+
+                        // Artwork
+                        artworkSection(program)
+
+                        // Title + Broadcaster
+                        programInfoSection(program)
+
+                        // Waveform + timestamps
+                        waveformSection
+                            .padding(.top, 24)
+
+                        // Playback controls
+                        playbackControls
+                            .padding(.top, 20)
+
+                        // Track list
+                        trackListSection
+                            .padding(.top, CrateTheme.Spacing.sectionGap)
+
+                        // Action buttons
+                        actionButtons(program)
+                            .padding(.top, CrateTheme.Spacing.sectionGap)
                     }
+                    .padding(.bottom, 120)
+                } else if let error = programViewModel.errorMessage {
+                    errorState(error)
                 }
-                .frame(maxWidth: .infinity, minHeight: 300)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 16) {
-                    FavoriteButton(isFavorited: programViewModel.isFavorited) {
-                        Task { await programViewModel.toggleFavorite() }
-                    }
-                    if let program = programViewModel.currentProgram {
-                        ShareButton(program: program)
-                    }
-                }
-            }
-        }
+        .navigationBarHidden(true)
         .onFirstAppear {
             await programViewModel.loadProgram(id: programId)
         }
     }
 
-    // MARK: - Program Header
+    // MARK: - Custom Navigation Bar
 
     @ViewBuilder
-    private func programHeader(_ program: Program) -> some View {
-        VStack(spacing: 16) {
-            // Thumbnail
-            AsyncImage(url: URL(string: program.thumbnailUrl ?? "")) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemGray5))
-                    .overlay {
-                        Image(systemName: "radio")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-                    }
+    private func customNavBar(_ program: Program) -> some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(CrateColors.textPrimary)
+                    .frame(width: 44, height: 44)
             }
-            .frame(height: 220)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
+            .buttonStyle(.plain)
 
-            // Program Info
-            VStack(alignment: .leading, spacing: 8) {
-                Text(program.title)
-                    .font(.title2)
-                    .fontWeight(.bold)
+            Spacer()
 
-                if let broadcaster = program.broadcaster {
-                    NavigationLink(destination: BroadcasterView(broadcasterId: broadcaster.id)) {
-                        HStack(spacing: 8) {
-                            AsyncImage(url: URL(string: broadcaster.avatarUrl ?? "")) { image in
-                                image.avatarStyle(size: 32)
-                            } placeholder: {
-                                Circle()
-                                    .fill(Color(.systemGray4))
-                                    .frame(width: 32, height: 32)
-                            }
+            Text("NOW PLAYING")
+                .crateText(.sectionLabel, color: CrateColors.textTertiary)
 
-                            Text(broadcaster.nickname)
-                                .font(.subheadline)
-                                .foregroundColor(.primary)
+            Spacer()
+
+            Menu {
+                if let shareUrl = program.shareUrl {
+                    Button {
+                        presentShareSheet(url: shareUrl, text: program.title)
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+                }
+                Button {
+                    // Report action placeholder
+                } label: {
+                    Label("Report", systemImage: "exclamationmark.triangle")
+                }
+            } label: {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(CrateColors.textPrimary)
+                    .frame(width: 44, height: 44)
+            }
+        }
+        .crateScreenPadding()
+        .padding(.top, 4)
+    }
+
+    // MARK: - Artwork
+
+    @ViewBuilder
+    private func artworkSection(_ program: Program) -> some View {
+        ProgramThumbnail(
+            url: program.thumbnailUrl,
+            size: 200,
+            cornerRadius: CrateTheme.CornerRadius.large
+        )
+        .padding(.top, 24)
+    }
+
+    // MARK: - Program Info
+
+    @ViewBuilder
+    private func programInfoSection(_ program: Program) -> some View {
+        VStack(spacing: CrateTheme.Spacing.textGapMedium) {
+            Text(program.title)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(CrateColors.textPrimary)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+
+            if let broadcaster = program.broadcaster {
+                NavigationLink(destination: BroadcasterView(broadcasterId: broadcaster.id)) {
+                    HStack(spacing: 4) {
+                        Text(broadcaster.nickname)
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundColor(CrateColors.textTertiary)
+
+                        if let episode = episodeLabel(program) {
+                            Text("\u{00B7}")
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundColor(CrateColors.textTertiary)
+
+                            Text(episode)
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundColor(CrateColors.textTertiary)
                         }
                     }
-                    .buttonStyle(.plain)
                 }
-
-                HStack(spacing: 16) {
-                    Label("\(program.playCount ?? 0)", systemImage: "play.fill")
-                    Label("\(program.favoriteCount ?? 0)", systemImage: "heart.fill")
-                    if let programType = program.programType {
-                        Label(programType.displayName, systemImage: programType.iconName)
-                    }
-                    if let duration = program.durationSeconds {
-                        Label(TimeInterval(duration).formattedDuration, systemImage: "clock")
-                    }
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-                if let description = program.description, !description.isEmpty {
-                    Text(description)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .lineLimit(4)
-                        .padding(.top, 4)
-                }
+                .buttonStyle(.plain)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
         }
-        .padding(.top, 8)
+        .padding(.top, 16)
+        .crateScreenPadding()
     }
 
     // MARK: - Waveform
@@ -130,47 +152,55 @@ struct ProgramView: View {
     @ViewBuilder
     private var waveformSection: some View {
         VStack(spacing: 8) {
-            WaveformView(
+            CrateWaveformView(
                 samples: coordinator.radioPlayer.waveformSamples,
                 progress: coordinator.progress,
                 onSeek: { percentage in
                     coordinator.seekRadioToPercentage(percentage)
                 }
             )
-            .frame(height: 60)
-            .padding(.horizontal)
+            .frame(height: 40)
+            .crateScreenPadding()
 
+            // SF Mono timestamps
             HStack {
                 Text(coordinator.currentRadioTime.formattedDuration)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .monospacedDigit()
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .tracking(CrateTypography.monoTracking)
+                    .foregroundColor(CrateColors.textTertiary)
+
                 Spacer()
+
                 Text(coordinator.radioDuration.formattedDuration)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .monospacedDigit()
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .tracking(CrateTypography.monoTracking)
+                    .foregroundColor(CrateColors.textTertiary)
             }
-            .padding(.horizontal)
+            .crateScreenPadding()
         }
-        .padding(.top, 16)
     }
 
-    // MARK: - Controls
+    // MARK: - Playback Controls
 
     @ViewBuilder
-    private func controlsBar(_ program: Program) -> some View {
-        HStack(spacing: 32) {
+    private var playbackControls: some View {
+        HStack(spacing: 40) {
+            // Previous / Rewind
             Button {
                 coordinator.seekRadio(to: max(0, coordinator.currentRadioTime - 15))
             } label: {
-                Image(systemName: "gobackward.15")
-                    .font(.title2)
+                Image(systemName: "backward.end.fill")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(CrateColors.textSecondary)
+                    .frame(width: 44, height: 44)
             }
+            .buttonStyle(.plain)
 
-            PlayButton(
+            // Play / Pause (medium CratePlayButton)
+            CratePlayButton(
                 isPlaying: coordinator.playbackState == .playing,
-                size: 56
+                isLoading: coordinator.playbackState == .loading,
+                size: .medium
             ) {
                 if coordinator.playbackState == .idle {
                     Task { await programViewModel.startPlayback(coordinator: coordinator) }
@@ -179,14 +209,17 @@ struct ProgramView: View {
                 }
             }
 
+            // Next / Forward
             Button {
                 coordinator.seekRadio(to: min(coordinator.radioDuration, coordinator.currentRadioTime + 30))
             } label: {
-                Image(systemName: "goforward.30")
-                    .font(.title2)
+                Image(systemName: "forward.end.fill")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(CrateColors.textSecondary)
+                    .frame(width: 44, height: 44)
             }
+            .buttonStyle(.plain)
         }
-        .padding(.vertical, 16)
     }
 
     // MARK: - Track List
@@ -204,16 +237,141 @@ struct ProgramView: View {
             )
         }
     }
-}
 
-// MARK: - Share Sheet
+    // MARK: - Action Buttons
 
-struct ShareSheetView: UIViewControllerRepresentable {
-    let items: [Any]
+    @ViewBuilder
+    private func actionButtons(_ program: Program) -> some View {
+        HStack(spacing: 24) {
+            // Favorite
+            FavoriteButtonAction(
+                isFavorited: programViewModel.isFavorited,
+                size: 22
+            ) {
+                Task { await programViewModel.toggleFavorite() }
+            }
 
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+            // Follow
+            if let broadcaster = program.broadcaster {
+                FollowButton(
+                    isFollowing: false,
+                    onToggle: { _ in
+                        // Follow toggle handled via ViewModel
+                    }
+                )
+            }
+
+            // Share
+            ShareButton(
+                url: program.shareUrl,
+                text: program.title,
+                size: 18
+            )
+
+            Spacer()
+        }
+        .crateScreenPadding()
     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    // MARK: - Loading State
+
+    private var loadingState: some View {
+        VStack(spacing: 16) {
+            Spacer()
+                .frame(height: 120)
+
+            SkeletonView(cornerRadius: CrateTheme.CornerRadius.large)
+                .frame(width: 200, height: 200)
+
+            SkeletonView(cornerRadius: 4)
+                .frame(width: 180, height: 16)
+
+            SkeletonView(cornerRadius: 4)
+                .frame(width: 120, height: 12)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Error State
+
+    @ViewBuilder
+    private func errorState(_ error: String) -> some View {
+        VStack(spacing: 16) {
+            Spacer()
+                .frame(height: 120)
+
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 36))
+                .foregroundColor(CrateColors.textMuted)
+
+            Text(error)
+                .crateText(.caption, color: CrateColors.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                Task { await programViewModel.loadProgram(id: programId) }
+            } label: {
+                Text("Retry")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(CrateColors.void)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(CrateColors.accent)
+                    .cornerRadius(CrateTheme.CornerRadius.pill)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .crateScreenPadding()
+    }
+
+    // MARK: - Helpers
+
+    private func episodeLabel(_ program: Program) -> String? {
+        if let genre = program.genre, !genre.isEmpty {
+            return genre
+        }
+        if let type = program.programType {
+            return type.displayName
+        }
+        return nil
+    }
+
+    private func presentShareSheet(url: String, text: String) {
+        var items: [Any] = [text]
+        if let shareURL = URL(string: url) {
+            items.append(shareURL)
+        }
+        guard !items.isEmpty else { return }
+
+        let activityVC = UIActivityViewController(
+            activityItems: items,
+            applicationActivities: nil
+        )
+
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController
+        else { return }
+
+        var presenter = rootVC
+        while let presented = presenter.presentedViewController {
+            presenter = presented
+        }
+
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = presenter.view
+            popover.sourceRect = CGRect(
+                x: presenter.view.bounds.midX,
+                y: presenter.view.bounds.midY,
+                width: 0, height: 0
+            )
+            popover.permittedArrowDirections = []
+        }
+
+        presenter.present(activityVC, animated: true)
+    }
 }

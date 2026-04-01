@@ -15,13 +15,17 @@ struct RecordingView: View {
                 recordingView
             }
         }
+        .background(CrateColors.void.ignoresSafeArea())
         .navigationTitle("Record Audio")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button("Cancel") {
+                Button {
                     viewModel.discardRecording()
                     dismiss()
+                } label: {
+                    Text("Cancel")
+                        .foregroundColor(CrateColors.textSecondary)
                 }
             }
         }
@@ -43,18 +47,24 @@ struct RecordingView: View {
 
     @ViewBuilder
     private var recordingView: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 0) {
             Spacer()
 
             // Timer
             Text(viewModel.durationFormatted)
-                .font(.system(size: 52, weight: .light, design: .monospaced))
-                .foregroundColor(viewModel.isRecording ? .red : .primary)
+                .font(.system(size: 56, weight: .light, design: .monospaced))
+                .tracking(CrateTypography.monoTracking)
+                .foregroundColor(viewModel.isRecording ? CrateColors.error : CrateColors.textPrimary)
+
+            Spacer().frame(height: 40)
 
             // Audio Level Visualization
-            AudioLevelBars(level: viewModel.normalizedLevel, isActive: viewModel.isRecording)
+            CrateAudioLevelBars(level: viewModel.normalizedLevel, isActive: viewModel.isRecording)
                 .frame(height: 80)
-                .padding(.horizontal, 40)
+                .crateScreenPadding()
+                .padding(.horizontal, 24)
+
+            Spacer().frame(height: 48)
 
             // Record Button
             Button {
@@ -65,26 +75,37 @@ struct RecordingView: View {
                 }
             } label: {
                 ZStack {
+                    // Outer ring
                     Circle()
-                        .fill(Color.red.opacity(0.15))
-                        .frame(width: 100, height: 100)
+                        .stroke(CrateColors.error.opacity(0.3), lineWidth: 3)
+                        .frame(width: 96, height: 96)
 
+                    // Glow
+                    if viewModel.isRecording {
+                        Circle()
+                            .fill(CrateColors.error.opacity(0.1))
+                            .frame(width: 96, height: 96)
+                    }
+
+                    // Inner shape
                     if viewModel.isRecording {
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.red)
+                            .fill(CrateColors.error)
                             .frame(width: 32, height: 32)
                     } else {
                         Circle()
-                            .fill(Color.red)
-                            .frame(width: 68, height: 68)
+                            .fill(CrateColors.error)
+                            .frame(width: 64, height: 64)
                     }
                 }
             }
+            .buttonStyle(.plain)
             .accessibilityLabel(viewModel.isRecording ? "Stop recording" : "Start recording")
 
+            Spacer().frame(height: 20)
+
             Text(viewModel.isRecording ? "Tap to stop" : "Tap to record")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .crateText(.caption, color: CrateColors.textSecondary)
 
             Spacer()
         }
@@ -94,95 +115,89 @@ struct RecordingView: View {
 
     @ViewBuilder
     private var previewView: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 0) {
             Spacer()
 
+            // Success indicator
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.green)
+                .font(.system(size: 56))
+                .foregroundColor(CrateColors.success)
+
+            Spacer().frame(height: 20)
 
             Text("Recording Complete")
-                .font(.title2)
-                .fontWeight(.bold)
+                .crateText(.h1)
+
+            Spacer().frame(height: 12)
 
             Text(viewModel.durationFormatted)
                 .font(.system(size: 36, weight: .light, design: .monospaced))
-                .foregroundColor(.secondary)
+                .tracking(CrateTypography.monoTracking)
+                .foregroundColor(CrateColors.textSecondary)
+
+            Spacer().frame(height: 32)
 
             // Preview playback button
-            Button {
+            CrateButton(
+                title: viewModel.isPreviewPlaying ? "Pause Preview" : "Play Preview",
+                variant: .secondary,
+                icon: viewModel.isPreviewPlaying ? "pause.fill" : "play.fill",
+                fullWidth: true
+            ) {
                 viewModel.togglePreview()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: viewModel.isPreviewPlaying ? "pause.fill" : "play.fill")
-                    Text(viewModel.isPreviewPlaying ? "Pause Preview" : "Play Preview")
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
             }
-            .padding(.horizontal, 32)
+            .crateScreenPadding()
 
             Spacer()
 
+            // Action buttons
             VStack(spacing: 12) {
-                // Continue to program creation
-                Button {
+                CrateButton(
+                    title: "Continue to Program",
+                    variant: .primary,
+                    icon: "arrow.right.circle.fill",
+                    fullWidth: true
+                ) {
                     if let (data, fileName) = viewModel.prepareAudioForUpload() {
                         audioDataForEdit = data
                         audioFileNameForEdit = fileName
                         showProgramEdit = true
                     }
-                } label: {
-                    Label("Continue to Program", systemImage: "arrow.right.circle.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
                 }
-                .padding(.horizontal, 32)
 
-                // Re-record
-                Button {
+                CrateButton(
+                    title: "Record Again",
+                    variant: .ghost,
+                    icon: "arrow.counterclockwise",
+                    fullWidth: true
+                ) {
                     viewModel.discardRecording()
-                } label: {
-                    Label("Record Again", systemImage: "arrow.counterclockwise")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .foregroundColor(.primary)
-                        .cornerRadius(12)
                 }
-                .padding(.horizontal, 32)
             }
+            .crateScreenPadding()
             .padding(.bottom, 32)
         }
     }
 }
 
-// MARK: - Audio Level Bars
+// MARK: - CRATE Audio Level Bars
 
-struct AudioLevelBars: View {
+struct CrateAudioLevelBars: View {
     let level: CGFloat
     let isActive: Bool
 
-    private let barCount = 20
+    private let barCount = 24
 
     var body: some View {
         GeometryReader { geometry in
-            HStack(alignment: .center, spacing: 3) {
+            HStack(alignment: .center, spacing: 2) {
                 ForEach(0..<barCount, id: \.self) { index in
                     let barLevel = barHeight(for: index, totalBars: barCount, level: level)
-                    RoundedRectangle(cornerRadius: 2)
+                    RoundedRectangle(cornerRadius: 1)
                         .fill(barColor(for: index, totalBars: barCount))
                         .frame(
-                            width: max(2, (geometry.size.width - CGFloat(barCount - 1) * 3) / CGFloat(barCount)),
-                            height: isActive ? max(4, geometry.size.height * barLevel) : 4
+                            width: max(2, (geometry.size.width - CGFloat(barCount - 1) * 2) / CGFloat(barCount)),
+                            height: isActive ? max(3, geometry.size.height * barLevel) : 3
                         )
                         .animation(.easeOut(duration: 0.08), value: level)
                 }
@@ -201,10 +216,13 @@ struct AudioLevelBars: View {
     private func barColor(for index: Int, totalBars: Int) -> Color {
         let ratio = CGFloat(index) / CGFloat(totalBars)
         if ratio > 0.85 {
-            return .red
+            return CrateColors.error
         } else if ratio > 0.65 {
-            return .orange
+            return CrateColors.accent
         }
-        return .green
+        return CrateColors.accentDim
     }
 }
+
+// Keep backward compatibility alias
+typealias AudioLevelBars = CrateAudioLevelBars

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PasswordResetView: View {
     @EnvironmentObject var viewModel: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: Field?
     @State private var showConfirmation = false
 
@@ -10,159 +11,185 @@ struct PasswordResetView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Image(systemName: "lock.rotation")
-                        .font(.system(size: 48))
-                        .foregroundColor(.accentColor)
+        ZStack {
+            CrateColors.void.ignoresSafeArea()
 
-                    Text("Reset Password")
-                        .font(.title2)
-                        .fontWeight(.bold)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 60)
 
-                    Text("Enter your email to receive a reset link")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.top, 40)
+                    // CRATE logo
+                    crateLogo
 
-                if !showConfirmation {
-                    requestSection
-                } else {
-                    confirmationSection
+                    Spacer().frame(height: 16)
+
+                    Text(showConfirmation
+                         ? "Enter the code from your email"
+                         : "Enter your email to receive a reset code")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(CrateColors.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+
+                    Spacer().frame(height: 48)
+
+                    if !showConfirmation {
+                        requestSection
+                    } else {
+                        confirmationSection
+                    }
+
+                    Spacer().frame(height: 40)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
-        .navigationTitle("Reset Password")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                crateBackButton { dismiss() }
+            }
+        }
     }
+
+    // MARK: - Logo
+
+    private var crateLogo: some View {
+        VStack(spacing: 8) {
+            Text("CRATE")
+                .font(.custom("SpaceGrotesk-Light", size: 28))
+                .tracking(8)
+                .foregroundColor(CrateColors.textPrimary)
+
+            Rectangle()
+                .fill(CrateColors.accent.opacity(0.3))
+                .frame(width: 40, height: 1)
+        }
+    }
+
+    // MARK: - Request Section
 
     @ViewBuilder
     private var requestSection: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Email")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                TextField("your@email.com", text: $viewModel.resetEmail)
-                    .textFieldStyle(.roundedBorder)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .autocapitalization(.none)
-                    .focused($focusedField, equals: .email)
-            }
+        VStack(spacing: 20) {
+            CrateTextField(
+                placeholder: "Email",
+                text: $viewModel.resetEmail,
+                keyboardType: .emailAddress,
+                textContentType: .emailAddress,
+                autocapitalization: .never,
+                onSubmit: { submitRequest() }
+            )
+            .focused($focusedField, equals: .email)
 
+            // Success message
             if let message = viewModel.resetSuccessMessage {
                 Text(message)
-                    .font(.caption)
-                    .foregroundColor(.green)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(CrateColors.success)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, -8)
             }
 
+            // Error
             if let error = viewModel.errorMessage {
                 Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(CrateColors.error)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, -8)
             }
 
-            Button {
-                focusedField = nil
-                Task {
-                    await viewModel.requestPasswordReset()
-                    if viewModel.errorMessage == nil {
-                        showConfirmation = true
-                    }
-                }
-            } label: {
-                Group {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text("Send Reset Link")
-                    }
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.accentColor)
-                .foregroundColor(.white)
-                .cornerRadius(12)
+            CrateButton(
+                title: "Reset Password",
+                variant: .primary,
+                isLoading: viewModel.isLoading,
+                isDisabled: viewModel.resetEmail.isEmpty,
+                fullWidth: true
+            ) {
+                submitRequest()
             }
-            .disabled(viewModel.isLoading)
         }
         .padding(.horizontal, 32)
     }
 
+    // MARK: - Confirmation Section
+
     @ViewBuilder
     private var confirmationSection: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Reset Token")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                TextField("Enter token from email", text: $viewModel.resetToken)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .token)
-            }
+        VStack(spacing: 20) {
+            CrateTextField(
+                placeholder: "Reset code",
+                text: $viewModel.resetToken,
+                onSubmit: { focusedField = .password }
+            )
+            .focused($focusedField, equals: .token)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("New Password")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                SecureField("At least 8 characters", text: $viewModel.newPassword)
-                    .textFieldStyle(.roundedBorder)
-                    .textContentType(.newPassword)
-                    .focused($focusedField, equals: .password)
-            }
+            CrateTextField(
+                placeholder: "New password",
+                text: $viewModel.newPassword,
+                isSecure: true,
+                textContentType: .newPassword,
+                onSubmit: { focusedField = .confirmPassword }
+            )
+            .focused($focusedField, equals: .password)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Confirm Password")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                SecureField("Re-enter password", text: $viewModel.newPasswordConfirm)
-                    .textFieldStyle(.roundedBorder)
-                    .textContentType(.newPassword)
-                    .focused($focusedField, equals: .confirmPassword)
-            }
+            CrateTextField(
+                placeholder: "Confirm password",
+                text: $viewModel.newPasswordConfirm,
+                isSecure: true,
+                textContentType: .newPassword,
+                onSubmit: { submitConfirm() }
+            )
+            .focused($focusedField, equals: .confirmPassword)
 
+            // Error
             if let error = viewModel.errorMessage {
                 Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(CrateColors.error)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, -8)
             }
 
+            // Success
             if let message = viewModel.resetSuccessMessage {
                 Text(message)
-                    .font(.caption)
-                    .foregroundColor(.green)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(CrateColors.success)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, -8)
             }
 
-            Button {
-                focusedField = nil
-                Task { await viewModel.confirmPasswordReset() }
-            } label: {
-                Group {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text("Reset Password")
-                    }
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.accentColor)
-                .foregroundColor(.white)
-                .cornerRadius(12)
+            CrateButton(
+                title: "Reset Password",
+                variant: .primary,
+                isLoading: viewModel.isLoading,
+                isDisabled: viewModel.resetToken.isEmpty || viewModel.newPassword.isEmpty,
+                fullWidth: true
+            ) {
+                submitConfirm()
             }
-            .disabled(viewModel.isLoading)
         }
         .padding(.horizontal, 32)
+    }
+
+    // MARK: - Actions
+
+    private func submitRequest() {
+        focusedField = nil
+        Task {
+            await viewModel.requestPasswordReset()
+            if viewModel.errorMessage == nil {
+                withAnimation(CrateTheme.Animation.standard) {
+                    showConfirmation = true
+                }
+            }
+        }
+    }
+
+    private func submitConfirm() {
+        focusedField = nil
+        Task { await viewModel.confirmPasswordReset() }
     }
 }

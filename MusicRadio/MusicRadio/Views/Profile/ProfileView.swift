@@ -7,25 +7,36 @@ struct ProfileView: View {
     @State private var showLogoutConfirm = false
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: false) {
             if viewModel.isLoading && viewModel.profile == nil {
                 ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 300)
+                    .tint(CrateColors.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 400)
             } else if let profile = viewModel.profile {
-                VStack(spacing: 24) {
+                VStack(spacing: CrateTheme.Spacing.sectionGap) {
                     profileHeader(profile)
+                    statsRow(profile)
                     menuSection
                 }
-                .padding(.bottom, 80)
+                .crateScreenPadding()
+                .padding(.bottom, 100)
             }
         }
-        .navigationTitle("Profile")
+        .background(CrateColors.void.ignoresSafeArea())
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("PROFILE")
+                    .crateText(.sectionLabel, color: CrateColors.textSecondary)
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     showEditProfile = true
                 } label: {
                     Image(systemName: "pencil")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(CrateColors.textSecondary)
                 }
             }
         }
@@ -48,109 +59,170 @@ struct ProfileView: View {
         .errorAlert(error: $viewModel.errorMessage)
     }
 
+    // MARK: - Profile Header
+
     @ViewBuilder
     private func profileHeader(_ profile: UserProfile) -> some View {
-        VStack(spacing: 16) {
-            AsyncImage(url: URL(string: profile.avatarUrl ?? "")) { image in
-                image.avatarStyle(size: 90)
-            } placeholder: {
-                Circle()
-                    .fill(Color(.systemGray4))
-                    .frame(width: 90, height: 90)
-                    .overlay {
-                        Image(systemName: "person.fill")
-                            .font(.largeTitle)
-                            .foregroundColor(.white)
-                    }
-            }
+        VStack(spacing: 14) {
+            // Large avatar
+            AvatarView(
+                url: profile.avatarUrl,
+                name: profile.nickname,
+                size: .medium
+            )
+            .scaleEffect(2.0)
+            .frame(width: 88, height: 88)
 
+            // Nickname
             Text(profile.nickname)
-                .font(.title2)
-                .fontWeight(.bold)
+                .crateText(.h1)
 
+            // Message
             if let message = profile.message, !message.isEmpty {
                 Text(message)
-                    .font(.body)
-                    .foregroundColor(.secondary)
+                    .crateText(.body, color: CrateColors.textSecondary)
                     .multilineTextAlignment(.center)
-            }
-
-            HStack(spacing: 32) {
-                statItem(value: profile.programCount ?? 0, label: "Programs")
-                statItem(value: profile.followerCount, label: "Followers")
-                statItem(value: profile.followingCount ?? 0, label: "Following")
-                statItem(value: profile.favoriteCount ?? 0, label: "Favorites")
+                    .lineLimit(3)
             }
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.top, 12)
+    }
+
+    // MARK: - Stats Row
+
+    @ViewBuilder
+    private func statsRow(_ profile: UserProfile) -> some View {
+        HStack(spacing: 0) {
+            statItem(value: profile.programCount ?? 0, label: "Shows")
+            statDivider
+            statItem(value: profile.followerCount, label: "Followers")
+            statDivider
+            statItem(value: profile.followingCount ?? 0, label: "Following")
+            statDivider
+            statItem(value: profile.favoriteCount ?? 0, label: "Favorites")
+        }
+        .padding(.vertical, 14)
+        .background(CrateColors.surface)
+        .cornerRadius(CrateTheme.CornerRadius.large)
+        .overlay(
+            RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.large)
+                .stroke(CrateColors.border, lineWidth: 0.5)
+        )
     }
 
     private func statItem(value: Int, label: String) -> some View {
-        VStack {
+        VStack(spacing: CrateTheme.Spacing.textGapSmall) {
             Text("\(value)")
-                .font(.headline)
+                .crateText(.h2)
+
             Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .crateText(.meta, color: CrateColors.textTertiary)
         }
+        .frame(maxWidth: .infinity)
     }
+
+    private var statDivider: some View {
+        Rectangle()
+            .fill(CrateColors.border)
+            .frame(width: 0.5, height: 32)
+    }
+
+    // MARK: - Menu Section
 
     @ViewBuilder
     private var menuSection: some View {
-        VStack(spacing: 0) {
-            NavigationLink(destination: MyProgramsView()) {
-                menuRow(icon: "radio", title: "My Programs")
+        VStack(spacing: CrateTheme.Spacing.cardGap) {
+            // Main menu group
+            VStack(spacing: 0) {
+                NavigationLink(destination: MyProgramsView()) {
+                    menuRow(icon: "radio", title: "My Shows")
+                }
+
+                menuDivider
+
+                NavigationLink(destination: FavoriteProgramsView()) {
+                    menuRow(icon: "heart.fill", title: "Favorites")
+                }
+
+                menuDivider
+
+                NavigationLink(destination: FollowListView()) {
+                    menuRow(icon: "person.2.fill", title: "Following")
+                }
+
+                menuDivider
+
+                NavigationLink(destination: PoCTestView()) {
+                    menuRow(icon: "checkmark.shield", title: "PoC Test")
+                }
             }
+            .background(CrateColors.surface)
+            .cornerRadius(CrateTheme.CornerRadius.large)
+            .overlay(
+                RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.large)
+                    .stroke(CrateColors.border, lineWidth: 0.5)
+            )
 
-            Divider().padding(.leading, 52)
-
-            NavigationLink(destination: FavoriteProgramsView()) {
-                menuRow(icon: "heart.fill", title: "Favorites")
-            }
-
-            Divider().padding(.leading, 52)
-
-            NavigationLink(destination: FollowListView()) {
-                menuRow(icon: "person.2.fill", title: "Following")
-            }
-
-            Divider().padding(.leading, 52)
-
-            NavigationLink(destination: PoCTestView()) {
-                menuRow(icon: "checkmark.shield", title: "PoC Test")
-            }
-
-            Divider().padding(.leading, 52)
-
+            // Sign out (separate card)
             Button {
                 showLogoutConfirm = true
             } label: {
-                menuRow(icon: "rectangle.portrait.and.arrow.right", title: "Sign Out", isDestructive: true)
+                menuRow(
+                    icon: "rectangle.portrait.and.arrow.right",
+                    title: "Sign Out",
+                    isDestructive: true
+                )
             }
+            .background(CrateColors.surface)
+            .cornerRadius(CrateTheme.CornerRadius.large)
+            .overlay(
+                RoundedRectangle(cornerRadius: CrateTheme.CornerRadius.large)
+                    .stroke(CrateColors.border, lineWidth: 0.5)
+            )
         }
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .padding(.horizontal)
     }
 
-    private func menuRow(icon: String, title: String, isDestructive: Bool = false) -> some View {
-        HStack(spacing: 16) {
+    private var menuDivider: some View {
+        Rectangle()
+            .fill(CrateColors.border)
+            .frame(height: 0.5)
+            .padding(.leading, 52)
+    }
+
+    private func menuRow(
+        icon: String,
+        title: String,
+        isDestructive: Bool = false
+    ) -> some View {
+        HStack(spacing: 14) {
             Image(systemName: icon)
-                .frame(width: 24)
-                .foregroundColor(isDestructive ? .red : .accentColor)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(isDestructive ? CrateColors.error : CrateColors.accent)
+                .frame(width: 24, alignment: .center)
 
             Text(title)
-                .foregroundColor(isDestructive ? .red : .primary)
+                .crateText(.body, color: isDestructive ? CrateColors.error : CrateColors.textPrimary)
 
             Spacer()
 
             if !isDestructive {
                 Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(CrateColors.textTertiary)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    NavigationStack {
+        ProfileView()
+            .environmentObject(AuthViewModel())
     }
 }

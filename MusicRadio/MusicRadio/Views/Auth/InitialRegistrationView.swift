@@ -2,6 +2,7 @@ import SwiftUI
 
 struct InitialRegistrationView: View {
     @EnvironmentObject var viewModel: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -9,87 +10,109 @@ struct InitialRegistrationView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Image(systemName: "person.badge.plus")
-                        .font(.system(size: 48))
-                        .foregroundColor(.accentColor)
+        ZStack {
+            CrateColors.void.ignoresSafeArea()
 
-                    Text("Complete Your Profile")
-                        .font(.title2)
-                        .fontWeight(.bold)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 60)
+
+                    // CRATE logo
+                    crateLogo
+
+                    Spacer().frame(height: 16)
 
                     Text("Choose a nickname and set your password")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(CrateColors.textTertiary)
                         .multilineTextAlignment(.center)
-                }
-                .padding(.top, 40)
+                        .padding(.horizontal, 40)
 
-                VStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Nickname")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        TextField("Your display name", text: $viewModel.registrationNickname)
-                            .textFieldStyle(.roundedBorder)
-                            .textContentType(.nickname)
-                            .focused($focusedField, equals: .nickname)
-                    }
+                    Spacer().frame(height: 48)
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Password")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        SecureField("At least 8 characters", text: $viewModel.registrationPassword)
-                            .textFieldStyle(.roundedBorder)
-                            .textContentType(.newPassword)
-                            .focused($focusedField, equals: .password)
-                    }
+                    // Form
+                    VStack(spacing: 20) {
+                        CrateTextField(
+                            placeholder: "Nickname",
+                            text: $viewModel.registrationNickname,
+                            textContentType: .nickname,
+                            onSubmit: { focusedField = .password }
+                        )
+                        .focused($focusedField, equals: .nickname)
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Confirm Password")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        SecureField("Re-enter password", text: $viewModel.registrationPasswordConfirm)
-                            .textFieldStyle(.roundedBorder)
-                            .textContentType(.newPassword)
-                            .focused($focusedField, equals: .confirmPassword)
-                    }
+                        CrateTextField(
+                            placeholder: "Password (8+ characters)",
+                            text: $viewModel.registrationPassword,
+                            isSecure: true,
+                            textContentType: .newPassword,
+                            onSubmit: { focusedField = .confirmPassword }
+                        )
+                        .focused($focusedField, equals: .password)
 
-                    if let error = viewModel.errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                        CrateTextField(
+                            placeholder: "Confirm password",
+                            text: $viewModel.registrationPasswordConfirm,
+                            isSecure: true,
+                            textContentType: .newPassword,
+                            onSubmit: { submitRegistration() }
+                        )
+                        .focused($focusedField, equals: .confirmPassword)
 
-                    Button {
-                        focusedField = nil
-                        Task { await viewModel.completeRegistration() }
-                    } label: {
-                        Group {
-                            if viewModel.isLoading {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("Create Account")
-                            }
+                        // Error
+                        if let error = viewModel.errorMessage {
+                            Text(error)
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundColor(CrateColors.error)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, -8)
                         }
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+
+                        CrateButton(
+                            title: "Complete Registration",
+                            variant: .primary,
+                            isLoading: viewModel.isLoading,
+                            isDisabled: viewModel.registrationNickname.isEmpty
+                                || viewModel.registrationPassword.isEmpty
+                                || viewModel.registrationPasswordConfirm.isEmpty,
+                            fullWidth: true
+                        ) {
+                            submitRegistration()
+                        }
                     }
-                    .disabled(viewModel.isLoading)
+                    .padding(.horizontal, 32)
+
+                    Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 32)
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                crateBackButton { dismiss() }
             }
         }
-        .navigationTitle("Registration")
-        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Logo
+
+    private var crateLogo: some View {
+        VStack(spacing: 8) {
+            Text("CRATE")
+                .font(.custom("SpaceGrotesk-Light", size: 28))
+                .tracking(8)
+                .foregroundColor(CrateColors.textPrimary)
+
+            Rectangle()
+                .fill(CrateColors.accent.opacity(0.3))
+                .frame(width: 40, height: 1)
+        }
+    }
+
+    // MARK: - Actions
+
+    private func submitRegistration() {
+        focusedField = nil
+        Task { await viewModel.completeRegistration() }
     }
 }

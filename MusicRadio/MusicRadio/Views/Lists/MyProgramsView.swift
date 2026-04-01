@@ -8,49 +8,46 @@ struct MyProgramsView: View {
     @State private var currentPage = 1
     @State private var errorMessage: String?
     @State private var showCreateProgram = false
+    @Environment(\.dismiss) private var dismiss
 
     private let programRepository: ProgramRepositoryProtocol = ProgramRepository()
 
     var body: some View {
-        Group {
-            if isLoading && programs.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if programs.isEmpty {
-                emptyState
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(programs) { program in
-                            NavigationLink(destination: ProgramEditView(editingProgramId: program.id)) {
-                                myProgramRow(program)
-                            }
-                            .buttonStyle(.plain)
-                            .onAppear {
-                                if program.id == programs.last?.id && hasMore {
-                                    Task { await loadMore() }
-                                }
-                            }
-                        }
+        ZStack {
+            CrateColors.void.ignoresSafeArea()
 
-                        if isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        }
-                    }
-                    .padding()
-                    .padding(.bottom, 80)
-                }
+            if isLoading && programs.isEmpty {
+                loadingState
+            } else if programs.isEmpty {
+                EmptyStateView(
+                    icon: "radio",
+                    title: "No Shows Yet",
+                    subtitle: "Create your first radio show and share your music taste",
+                    actionTitle: "Create Show",
+                    onAction: { showCreateProgram = true }
+                )
+            } else {
+                programList
             }
         }
-        .navigationTitle("My Programs")
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                crateBackButton { dismiss() }
+            }
+            ToolbarItem(placement: .principal) {
+                Text("MY SHOWS")
+                    .font(.custom("SpaceGrotesk-Medium", size: 11))
+                    .tracking(2)
+                    .foregroundColor(CrateColors.textSecondary)
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     showCreateProgram = true
                 } label: {
                     Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(CrateColors.accent)
                 }
             }
         }
@@ -68,55 +65,91 @@ struct MyProgramsView: View {
         .errorAlert(error: $errorMessage)
     }
 
+    // MARK: - Program List
+
+    private var programList: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: CrateTheme.Spacing.cardGap) {
+                ForEach(programs) { program in
+                    NavigationLink(destination: ProgramEditView(editingProgramId: program.id)) {
+                        myProgramRow(program)
+                    }
+                    .buttonStyle(.plain)
+                    .onAppear {
+                        if program.id == programs.last?.id && hasMore {
+                            Task { await loadMore() }
+                        }
+                    }
+                }
+
+                if isLoadingMore {
+                    ProgressView()
+                        .tint(CrateColors.textTertiary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                }
+            }
+            .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+            .padding(.top, 8)
+            .padding(.bottom, 100)
+        }
+    }
+
+    // MARK: - Program Row
+
     private func myProgramRow(_ program: Program) -> some View {
         HStack(spacing: 12) {
-            AsyncImage(url: URL(string: program.thumbnailUrl ?? "")) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray5))
-                    .overlay {
-                        Image(systemName: "radio")
-                            .foregroundColor(.secondary)
-                    }
-            }
-            .frame(width: 60, height: 60)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            // Thumbnail
+            ProgramThumbnail(
+                url: program.thumbnailUrl,
+                size: 56,
+                cornerRadius: 8
+            )
 
+            // Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(program.title)
-                    .font(.headline)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(CrateColors.textPrimary)
                     .lineLimit(1)
 
                 HStack(spacing: 8) {
                     if let status = program.status {
                         statusBadge(status)
                     }
+
                     Text(program.durationFormatted)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("\(program.playCount ?? 0) plays")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(CrateColors.textTertiary)
+
+                    HStack(spacing: 3) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 8))
+                        Text("\(program.playCount ?? 0)")
+                            .font(.system(size: 11, weight: .regular))
+                    }
+                    .foregroundColor(CrateColors.textTertiary)
                 }
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(CrateColors.textDisabled)
         }
-        .padding(.vertical, 4)
+        .padding(CrateTheme.Spacing.cardPadding)
+        .background(CrateColors.surface)
+        .cornerRadius(CrateTheme.CornerRadius.large)
     }
 
+    // MARK: - Status Badge
+
     private func statusBadge(_ status: ProgramStatus) -> some View {
-        Text(status.displayName)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 8)
+        Text(status.displayName.uppercased())
+            .font(.system(size: 9, weight: .bold))
+            .tracking(0.5)
+            .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(statusColor(status).opacity(0.15))
             .foregroundColor(statusColor(status))
@@ -125,29 +158,26 @@ struct MyProgramsView: View {
 
     private func statusColor(_ status: ProgramStatus) -> Color {
         switch status {
-        case .draft: return .orange
-        case .published: return .green
-        case .archived: return .gray
+        case .draft:     return Color(red: 255/255, green: 180/255, blue: 50/255)
+        case .published: return CrateColors.success
+        case .archived:  return CrateColors.textTertiary
         }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "radio")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("No programs yet")
-                .font(.title3)
-                .foregroundColor(.secondary)
-            Button {
-                showCreateProgram = true
-            } label: {
-                Label("Create Your First Program", systemImage: "plus.circle.fill")
-                    .font(.headline)
+    // MARK: - Loading
+
+    private var loadingState: some View {
+        VStack(spacing: CrateTheme.Spacing.cardGap) {
+            ForEach(0..<5, id: \.self) { _ in
+                SkeletonView(cornerRadius: CrateTheme.CornerRadius.large)
+                    .frame(height: 80)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, CrateTheme.Spacing.screenMargin)
+        .padding(.top, 8)
     }
+
+    // MARK: - Data Loading
 
     private func loadPrograms() async {
         isLoading = true
