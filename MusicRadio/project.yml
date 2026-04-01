@@ -1,0 +1,59 @@
+name: MusicRadio
+options:
+  bundleIdPrefix: com.musicradio
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  MusicRadio:
+    type: application
+    platform: iOS
+    sources:
+      - path: MusicRadio
+    settings:
+      base:
+        INFOPLIST_FILE: MusicRadio/Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.musicradio.app
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: "NO"
+    entitlements:
+      path: MusicRadio/MusicRadio.entitlements
+      properties:
+        com.apple.developer.musickit: true
+    info:
+      path: MusicRadio/Resources/Info.plist
+      properties:
+        UIBackgroundModes:
+          - audio
+        NSAppleMusicUsageDescription: "ラジオ番組と一緒にApple Musicの楽曲を再生するために使用します"
+        CFBundleDisplayName: Music Radio
+        UILaunchScreen: {}
+
+  MusicRadioTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MusicRadioTests
+    dependencies:
+      - target: MusicRadio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.musicradio.tests
+
+  MusicRadioUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: MusicRadioUITests
+    dependencies:
+      - target: MusicRadio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.musicradio.uitests

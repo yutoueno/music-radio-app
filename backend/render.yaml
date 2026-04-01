@@ -1,0 +1,24 @@
+databases:
+  - name: music-radio-db
+    plan: free
+    databaseName: music_radio
+    user: music_radio_user
+
+services:
+  - type: web
+    name: music-radio-api
+    plan: free
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: music-radio-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://music-radio-admin.vercel.app
+      - key: WEB_BASE_URL
+        value: https://music-radio-api.onrender.com
