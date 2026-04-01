@@ -5,6 +5,8 @@ import SearchScreen from "@/components/screens/SearchScreen";
 import ProfileScreen from "@/components/screens/ProfileScreen";
 import BroadcasterScreen from "@/components/screens/BroadcasterScreen";
 import SignInScreen from "@/components/screens/SignInScreen";
+import NowPlayingFullScreen from "@/components/screens/NowPlayingFullScreen";
+import TrackTimingScreen from "@/components/screens/TrackTimingScreen";
 
 export default function Home() {
   return (
@@ -17,7 +19,7 @@ export default function Home() {
             <p className="text-[13px] text-crate-text-secondary mt-0.5">iOS App Screen Preview</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-mono text-crate-text-muted">6 screens</span>
+            <span className="text-[11px] font-mono text-crate-text-muted">8 screens</span>
             <div className="w-2 h-2 rounded-full bg-crate-success animate-pulse" />
           </div>
         </div>
@@ -44,7 +46,7 @@ export default function Home() {
         </section>
 
         {/* Row 2: Secondary Screens */}
-        <section>
+        <section className="mb-16">
           <h2 className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary mb-8">
             Secondary Screens
           </h2>
@@ -57,6 +59,21 @@ export default function Home() {
             </IPhoneFrame>
             <IPhoneFrame label="Sign In">
               <SignInScreen />
+            </IPhoneFrame>
+          </div>
+        </section>
+
+        {/* Row 3: Playback Screens */}
+        <section>
+          <h2 className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary mb-8">
+            Playback Screens
+          </h2>
+          <div className="flex flex-wrap gap-12 justify-center">
+            <IPhoneFrame label="Full Screen Player">
+              <NowPlayingFullScreen />
+            </IPhoneFrame>
+            <IPhoneFrame label="Track Timing Editor">
+              <TrackTimingScreen />
             </IPhoneFrame>
           </div>
         </section>

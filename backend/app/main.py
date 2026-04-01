@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import admin, analytics, auth, inquiries, notifications, programs, social, tracks, upload, users, web
+from app.routers import admin, analytics, auth, inquiries, notifications, playback, programs, social, tracks, upload, users, web
 
 app = FastAPI(
     title="Music Radio API",
@@ -30,6 +30,7 @@ app.include_router(admin.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(inquiries.router, prefix="/api/v1")
+app.include_router(playback.router, prefix="/api/v1")
 
 # Web routes (mounted AFTER api routes, no /api/v1 prefix)
 app.include_router(web.router)

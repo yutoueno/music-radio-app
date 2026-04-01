@@ -63,6 +63,34 @@ def generate_presigned_audio_upload_url(file_extension: str = "mp3") -> dict:
     )
 
 
+def generate_presigned_get_url(file_url: str, expires_in: int = 3600) -> str:
+    """Generate a presigned URL for reading (GET) a file from S3.
+
+    Takes the full S3 file URL and returns a presigned GET URL.
+    """
+    s3_client = get_s3_client()
+
+    # Extract the key from the full URL
+    # Expected format: https://{bucket}.s3.{region}.amazonaws.com/{key}
+    prefix = f"https://{settings.S3_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/"
+    if file_url.startswith(prefix):
+        file_key = file_url[len(prefix):]
+    else:
+        # Fallback: assume the value is already a key
+        file_key = file_url
+
+    presigned_url = s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": settings.S3_BUCKET_NAME,
+            "Key": file_key,
+        },
+        ExpiresIn=expires_in,
+    )
+
+    return presigned_url
+
+
 def generate_presigned_image_upload_url(file_extension: str = "jpg") -> dict:
     content_type_map = {
         "jpg": "image/jpeg",

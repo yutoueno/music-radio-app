@@ -4,6 +4,7 @@ from app.models.social import Favorite, Follow
 from app.models.play_log import ProgramPlay
 from app.models.notification import DeviceToken, Notification
 from app.models.inquiry import Inquiry
+from app.models.playback import PlaybackSession, TrackPlay
 
 __all__ = [
     "User",
@@ -16,4 +17,6 @@ __all__ = [
     "DeviceToken",
     "Notification",
     "Inquiry",
+    "PlaybackSession",
+    "TrackPlay",
 ]
