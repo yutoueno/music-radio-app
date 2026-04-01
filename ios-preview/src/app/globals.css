@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-crate-void: #0A0A0A;
+  --color-crate-surface: #111111;
+  --color-crate-elevated: #1A1A2E;
+  --color-crate-accent: #7C83FF;
+  --color-crate-accent-dim: #5A5FCC;
+  --color-crate-text-primary: #F0F0F0;
+  --color-crate-text-secondary: #888888;
+  --color-crate-text-tertiary: #555555;
+  --color-crate-text-muted: #444444;
+  --color-crate-border: #222222;
+  --color-crate-error: #FF4D4D;
+  --color-crate-success: #4DFF88;
+
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--color-crate-void);
+  color: var(--color-crate-text-primary);
+  font-family: var(--font-sans);
+}
+
+/* iPhone frame scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* Smooth scrolling inside phone frames */
+.phone-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.phone-scroll::-webkit-scrollbar {
+  display: none;
+}
