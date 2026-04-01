@@ -7,6 +7,13 @@ import BroadcasterScreen from "@/components/screens/BroadcasterScreen";
 import SignInScreen from "@/components/screens/SignInScreen";
 import NowPlayingFullScreen from "@/components/screens/NowPlayingFullScreen";
 import TrackTimingScreen from "@/components/screens/TrackTimingScreen";
+import AudioUploadScreen from "@/components/screens/AudioUploadScreen";
+import ProgramEditScreen from "@/components/screens/ProgramEditScreen";
+import BroadcastHubScreen from "@/components/screens/BroadcastHubScreen";
+import FavoritesScreen from "@/components/screens/FavoritesScreen";
+import FollowListScreen from "@/components/screens/FollowListScreen";
+import NotificationsScreen from "@/components/screens/NotificationsScreen";
+import AnalyticsScreen from "@/components/screens/AnalyticsScreen";
 
 export default function Home() {
   return (
@@ -19,7 +26,7 @@ export default function Home() {
             <p className="text-[13px] text-crate-text-secondary mt-0.5">iOS App Screen Preview</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-mono text-crate-text-muted">8 screens</span>
+            <span className="text-[11px] font-mono text-crate-text-muted">15 screens</span>
             <div className="w-2 h-2 rounded-full bg-crate-success animate-pulse" />
           </div>
         </div>
@@ -64,7 +71,7 @@ export default function Home() {
         </section>
 
         {/* Row 3: Playback Screens */}
-        <section>
+        <section className="mb-16">
           <h2 className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary mb-8">
             Playback Screens
           </h2>
@@ -74,6 +81,45 @@ export default function Home() {
             </IPhoneFrame>
             <IPhoneFrame label="Track Timing Editor">
               <TrackTimingScreen />
+            </IPhoneFrame>
+          </div>
+        </section>
+
+        {/* Row 4: Broadcaster Screens */}
+        <section className="mb-16">
+          <h2 className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary mb-8">
+            Broadcaster Screens
+          </h2>
+          <div className="flex flex-wrap gap-12 justify-center">
+            <IPhoneFrame label="Broadcast Hub">
+              <BroadcastHubScreen />
+            </IPhoneFrame>
+            <IPhoneFrame label="Audio Upload">
+              <AudioUploadScreen />
+            </IPhoneFrame>
+            <IPhoneFrame label="Program Edit">
+              <ProgramEditScreen />
+            </IPhoneFrame>
+          </div>
+        </section>
+
+        {/* Row 5: Social & Utility Screens */}
+        <section>
+          <h2 className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary mb-8">
+            Social & Utility Screens
+          </h2>
+          <div className="flex flex-wrap gap-12 justify-center">
+            <IPhoneFrame label="Favorites">
+              <FavoritesScreen />
+            </IPhoneFrame>
+            <IPhoneFrame label="Following">
+              <FollowListScreen />
+            </IPhoneFrame>
+            <IPhoneFrame label="Notifications">
+              <NotificationsScreen />
+            </IPhoneFrame>
+            <IPhoneFrame label="Analytics">
+              <AnalyticsScreen />
             </IPhoneFrame>
           </div>
         </section>
