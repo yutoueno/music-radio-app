@@ -12,7 +12,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface LineChartCardProps {
   title: string;
@@ -28,31 +27,38 @@ export function LineChartCard({
   data,
   dataKey,
   xAxisKey = "date",
-  color = "hsl(221, 83%, 53%)",
+  color = "#7C83FF",
   height = 300,
 }: LineChartCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="rounded-xl border border-crate-border bg-crate-surface">
+      <div className="border-b border-crate-border px-5 py-4">
+        <h3 className="text-sm font-semibold text-crate-text-primary">{title}</h3>
+      </div>
+      <div className="p-5">
         <ResponsiveContainer width="100%" height={height}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
             <XAxis
               dataKey={xAxisKey}
-              className="text-xs"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: "#555555" }}
+              axisLine={{ stroke: "#222222" }}
+              tickLine={{ stroke: "#222222" }}
             />
-            <YAxis className="text-xs" tick={{ fontSize: 12 }} />
+            <YAxis
+              tick={{ fontSize: 12, fill: "#555555" }}
+              axisLine={{ stroke: "#222222" }}
+              tickLine={{ stroke: "#222222" }}
+            />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "#1A1A1A",
+                border: "1px solid #222222",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "#F0F0F0",
               }}
+              labelStyle={{ color: "#888888" }}
             />
             <Line
               type="monotone"
@@ -60,12 +66,12 @@ export function LineChartCard({
               stroke={color}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4 }}
+              activeDot={{ r: 4, fill: color, stroke: "#0A0A0A", strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -85,29 +91,38 @@ export function MultiLineChartCard({
   height = 300,
 }: MultiLineChartCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="rounded-xl border border-crate-border bg-crate-surface">
+      <div className="border-b border-crate-border px-5 py-4">
+        <h3 className="text-sm font-semibold text-crate-text-primary">{title}</h3>
+      </div>
+      <div className="p-5">
         <ResponsiveContainer width="100%" height={height}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
             <XAxis
               dataKey={xAxisKey}
-              className="text-xs"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: "#555555" }}
+              axisLine={{ stroke: "#222222" }}
+              tickLine={{ stroke: "#222222" }}
             />
-            <YAxis className="text-xs" tick={{ fontSize: 12 }} />
+            <YAxis
+              tick={{ fontSize: 12, fill: "#555555" }}
+              axisLine={{ stroke: "#222222" }}
+              tickLine={{ stroke: "#222222" }}
+            />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "#1A1A1A",
+                border: "1px solid #222222",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "#F0F0F0",
               }}
+              labelStyle={{ color: "#888888" }}
             />
-            <Legend />
+            <Legend
+              wrapperStyle={{ color: "#888888", fontSize: "12px" }}
+            />
             {lines.map((line) => (
               <Line
                 key={line.dataKey}
@@ -122,8 +137,8 @@ export function MultiLineChartCard({
             ))}
           </LineChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -141,36 +156,44 @@ export function BarChartCard({
   data,
   dataKey,
   xAxisKey = "name",
-  color = "hsl(221, 83%, 53%)",
+  color = "#7C83FF",
   height = 300,
 }: BarChartCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="rounded-xl border border-crate-border bg-crate-surface">
+      <div className="border-b border-crate-border px-5 py-4">
+        <h3 className="text-sm font-semibold text-crate-text-primary">{title}</h3>
+      </div>
+      <div className="p-5">
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
             <XAxis
               dataKey={xAxisKey}
-              className="text-xs"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: "#555555" }}
+              axisLine={{ stroke: "#222222" }}
+              tickLine={{ stroke: "#222222" }}
             />
-            <YAxis className="text-xs" tick={{ fontSize: 12 }} />
+            <YAxis
+              tick={{ fontSize: 12, fill: "#555555" }}
+              axisLine={{ stroke: "#222222" }}
+              tickLine={{ stroke: "#222222" }}
+            />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "#1A1A1A",
+                border: "1px solid #222222",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "#F0F0F0",
               }}
+              labelStyle={{ color: "#888888" }}
+              cursor={{ fill: "rgba(124, 131, 255, 0.05)" }}
             />
             <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

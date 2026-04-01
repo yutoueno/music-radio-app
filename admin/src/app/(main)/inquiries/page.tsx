@@ -1,24 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Search, Eye, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MessageSquare, Search, Eye, Save, X } from "lucide-react";
 import { DataTable, type Column } from "@/components/data-table";
 import { Pagination } from "@/components/pagination";
 import { useToast } from "@/components/ui/toast";
@@ -33,11 +16,11 @@ const STATUS_LABELS: Record<Inquiry["status"], string> = {
   closed: "クローズ",
 };
 
-const STATUS_VARIANTS: Record<Inquiry["status"], "default" | "secondary" | "success" | "destructive"> = {
-  pending: "destructive",
-  in_progress: "default",
-  resolved: "success",
-  closed: "secondary",
+const STATUS_COLORS: Record<Inquiry["status"], string> = {
+  pending: "bg-crate-error/15 text-crate-error",
+  in_progress: "bg-crate-accent/15 text-crate-accent",
+  resolved: "bg-crate-success/15 text-crate-success",
+  closed: "bg-crate-elevated text-crate-text-tertiary",
 };
 
 export default function InquiriesPage() {
@@ -110,8 +93,8 @@ export default function InquiriesPage() {
       header: "件名",
       render: (inquiry) => (
         <div className="max-w-[300px]">
-          <p className="font-medium truncate">{inquiry.subject}</p>
-          <p className="text-xs text-muted-foreground truncate">{inquiry.body}</p>
+          <p className="font-medium truncate text-crate-text-primary">{inquiry.subject}</p>
+          <p className="text-xs truncate text-crate-text-tertiary">{inquiry.body}</p>
         </div>
       ),
     },
@@ -119,23 +102,23 @@ export default function InquiriesPage() {
       key: "email",
       header: "メールアドレス",
       render: (inquiry) => (
-        <span className="text-sm">{inquiry.email}</span>
+        <span className="text-sm text-crate-text-secondary">{inquiry.email}</span>
       ),
     },
     {
       key: "status",
       header: "ステータス",
       render: (inquiry) => (
-        <Badge variant={STATUS_VARIANTS[inquiry.status]}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[inquiry.status]}`}>
           {STATUS_LABELS[inquiry.status]}
-        </Badge>
+        </span>
       ),
     },
     {
       key: "created_at",
       header: "受信日時",
       render: (inquiry) => (
-        <span className="text-sm">{formatDateTime(inquiry.created_at)}</span>
+        <span className="text-sm text-crate-text-secondary">{formatDateTime(inquiry.created_at)}</span>
       ),
     },
     {
@@ -143,14 +126,12 @@ export default function InquiriesPage() {
       header: "",
       className: "w-10",
       render: (inquiry) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-crate-text-tertiary transition-colors hover:bg-crate-elevated hover:text-crate-text-primary"
           onClick={() => handleOpenDetail(inquiry)}
         >
           <Eye className="h-4 w-4" />
-        </Button>
+        </button>
       ),
     },
   ];
@@ -158,8 +139,8 @@ export default function InquiriesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">お問い合わせ管理</h1>
-        <p className="text-muted-foreground">
+        <h1 className="font-heading text-2xl font-bold text-crate-text-primary">お問い合わせ管理</h1>
+        <p className="text-sm text-crate-text-secondary">
           ユーザーからのお問い合わせ一覧
         </p>
       </div>
@@ -167,39 +148,29 @@ export default function InquiriesPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-crate-text-tertiary" />
+          <input
             placeholder="件名やメールで検索..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="pl-9"
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="w-full rounded-lg border border-crate-border bg-crate-elevated py-2 pl-9 pr-4 text-sm text-crate-text-primary placeholder:text-crate-text-tertiary outline-none transition-colors focus:border-crate-accent"
           />
         </div>
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => {
-            setStatusFilter(v === "all" ? "" : v);
-            setPage(1);
-          }}
+        <select
+          value={statusFilter || "all"}
+          onChange={(e) => { setStatusFilter(e.target.value === "all" ? "" : e.target.value); setPage(1); }}
+          className="rounded-lg border border-crate-border bg-crate-elevated px-3 py-2 text-sm text-crate-text-primary outline-none focus:border-crate-accent"
         >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="ステータス" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">すべて</SelectItem>
-            <SelectItem value="pending">未対応</SelectItem>
-            <SelectItem value="in_progress">対応中</SelectItem>
-            <SelectItem value="resolved">解決済み</SelectItem>
-            <SelectItem value="closed">クローズ</SelectItem>
-          </SelectContent>
-        </Select>
+          <option value="all">すべて</option>
+          <option value="pending">未対応</option>
+          <option value="in_progress">対応中</option>
+          <option value="resolved">解決済み</option>
+          <option value="closed">クローズ</option>
+        </select>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border bg-card">
+      <div className="rounded-xl border border-crate-border bg-crate-surface">
         <DataTable
           columns={columns}
           data={inquiries}
@@ -209,89 +180,90 @@ export default function InquiriesPage() {
         {meta && <Pagination meta={meta} onPageChange={setPage} />}
       </div>
 
-      {/* Detail Dialog */}
-      <Dialog
-        open={!!selectedInquiry}
-        onOpenChange={(open) => {
-          if (!open) setSelectedInquiry(null);
-        }}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              お問い合わせ詳細
-            </DialogTitle>
-          </DialogHeader>
+      {/* Detail Modal */}
+      {selectedInquiry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-lg rounded-xl border border-crate-border bg-crate-surface p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-crate-text-primary">
+                <MessageSquare className="h-5 w-5 text-crate-accent" />
+                お問い合わせ詳細
+              </h2>
+              <button
+                onClick={() => setSelectedInquiry(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-crate-text-tertiary hover:bg-crate-elevated hover:text-crate-text-primary"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-          {selectedInquiry && (
             <div className="space-y-4">
               <div>
-                <Label className="text-xs text-muted-foreground">件名</Label>
-                <p className="font-medium">{selectedInquiry.subject}</p>
+                <label className="text-xs font-medium uppercase tracking-wider text-crate-text-tertiary">件名</label>
+                <p className="mt-1 font-medium text-crate-text-primary">{selectedInquiry.subject}</p>
               </div>
 
               <div>
-                <Label className="text-xs text-muted-foreground">メールアドレス</Label>
-                <p className="text-sm">{selectedInquiry.email}</p>
+                <label className="text-xs font-medium uppercase tracking-wider text-crate-text-tertiary">メールアドレス</label>
+                <p className="mt-1 text-sm text-crate-text-secondary">{selectedInquiry.email}</p>
               </div>
 
               <div>
-                <Label className="text-xs text-muted-foreground">受信日時</Label>
-                <p className="text-sm">{formatDateTime(selectedInquiry.created_at)}</p>
+                <label className="text-xs font-medium uppercase tracking-wider text-crate-text-tertiary">受信日時</label>
+                <p className="mt-1 text-sm text-crate-text-secondary">{formatDateTime(selectedInquiry.created_at)}</p>
               </div>
 
               <div>
-                <Label className="text-xs text-muted-foreground">内容</Label>
-                <p className="text-sm whitespace-pre-wrap rounded-md border bg-muted/50 p-3">
+                <label className="text-xs font-medium uppercase tracking-wider text-crate-text-tertiary">内容</label>
+                <p className="mt-1 whitespace-pre-wrap rounded-lg border border-crate-border bg-crate-elevated p-3 text-sm text-crate-text-primary">
                   {selectedInquiry.body}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">ステータス</Label>
-                <Select value={editStatus} onValueChange={setEditStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">未対応</SelectItem>
-                    <SelectItem value="in_progress">対応中</SelectItem>
-                    <SelectItem value="resolved">解決済み</SelectItem>
-                    <SelectItem value="closed">クローズ</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-xs font-medium uppercase tracking-wider text-crate-text-tertiary">ステータス</label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full rounded-lg border border-crate-border bg-crate-elevated px-3 py-2 text-sm text-crate-text-primary outline-none focus:border-crate-accent"
+                >
+                  <option value="pending">未対応</option>
+                  <option value="in_progress">対応中</option>
+                  <option value="resolved">解決済み</option>
+                  <option value="closed">クローズ</option>
+                </select>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">管理者メモ</Label>
+                <label className="text-xs font-medium uppercase tracking-wider text-crate-text-tertiary">管理者メモ</label>
                 <textarea
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full min-h-[80px] rounded-lg border border-crate-border bg-crate-elevated px-3 py-2 text-sm text-crate-text-primary placeholder:text-crate-text-tertiary outline-none focus:border-crate-accent resize-none"
                   placeholder="対応メモを入力..."
                   value={editNote}
                   onChange={(e) => setEditNote(e.target.value)}
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  variant="outline"
+              <div className="flex justify-end gap-3 pt-2">
+                <button
                   onClick={() => setSelectedInquiry(null)}
+                  className="rounded-lg border border-crate-border bg-crate-elevated px-4 py-2 text-sm text-crate-text-secondary transition-colors hover:bg-crate-surface hover:text-crate-text-primary"
                 >
                   キャンセル
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleSave}
                   disabled={updateInquiry.isPending}
+                  className="flex items-center gap-2 rounded-lg bg-crate-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-crate-accent-dim disabled:opacity-50"
                 >
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="h-4 w-4" />
                   {updateInquiry.isPending ? "保存中..." : "保存"}
-                </Button>
+                </button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatNumber, formatPercentage } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -20,29 +19,34 @@ export function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+    <div
+      className={cn(
+        "rounded-xl border border-crate-border bg-crate-surface p-5 transition-colors hover:border-crate-accent/30",
+        className
+      )}
+    >
+      <div className="flex items-center justify-between pb-2">
+        <span className="text-xs font-medium uppercase tracking-wider text-crate-text-secondary">
           {title}
-        </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{formatNumber(value)}</div>
-        {growthRate !== undefined && (
-          <p
-            className={cn(
-              "mt-1 text-xs",
-              growthRate >= 0 ? "text-green-600" : "text-red-600"
-            )}
-          >
-            {formatPercentage(growthRate)} 前月比
-          </p>
-        )}
-        {description && (
-          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-        )}
-      </CardContent>
-    </Card>
+        </span>
+        <Icon className="h-4 w-4 text-crate-text-tertiary" />
+      </div>
+      <div className="text-2xl font-bold text-crate-text-primary">
+        {formatNumber(value)}
+      </div>
+      {growthRate !== undefined && (
+        <p
+          className={cn(
+            "mt-1 text-xs",
+            growthRate >= 0 ? "text-crate-success" : "text-crate-error"
+          )}
+        >
+          {formatPercentage(growthRate)} 前月比
+        </p>
+      )}
+      {description && (
+        <p className="mt-1 text-xs text-crate-text-tertiary">{description}</p>
+      )}
+    </div>
   );
 }

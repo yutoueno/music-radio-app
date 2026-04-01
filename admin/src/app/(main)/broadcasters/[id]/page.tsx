@@ -13,12 +13,7 @@ import {
   Play,
   Heart,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type Column } from "@/components/data-table";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -35,10 +30,10 @@ const statusLabels: Record<string, string> = {
   archived: "アーカイブ",
 };
 
-const statusVariants: Record<string, "default" | "success" | "secondary" | "destructive"> = {
-  draft: "secondary",
-  published: "success",
-  archived: "default",
+const statusColors: Record<string, string> = {
+  draft: "bg-crate-elevated text-crate-text-tertiary",
+  published: "bg-crate-success/15 text-crate-success",
+  archived: "bg-yellow-500/15 text-yellow-400",
 };
 
 export default function BroadcasterDetailPage() {
@@ -60,10 +55,7 @@ export default function BroadcasterDetailPage() {
     if (!broadcaster) return;
     try {
       await suspendUser.mutateAsync(broadcaster.id);
-      toast({
-        title: "アカウントを停止しました",
-        variant: "success",
-      });
+      toast({ title: "アカウントを停止しました", variant: "success" });
     } catch {
       toast({ title: "エラーが発生しました", variant: "destructive" });
     }
@@ -73,10 +65,7 @@ export default function BroadcasterDetailPage() {
     if (!broadcaster) return;
     try {
       await activateUser.mutateAsync(broadcaster.id);
-      toast({
-        title: "アカウントを有効化しました",
-        variant: "success",
-      });
+      toast({ title: "アカウントを有効化しました", variant: "success" });
     } catch {
       toast({ title: "エラーが発生しました", variant: "destructive" });
     }
@@ -89,7 +78,7 @@ export default function BroadcasterDetailPage() {
       render: (program) => (
         <Link
           href={`/programs/${program.id}`}
-          className="font-medium hover:underline"
+          className="font-medium text-crate-text-primary hover:text-crate-accent"
         >
           {program.title}
         </Link>
@@ -99,47 +88,57 @@ export default function BroadcasterDetailPage() {
       key: "status",
       header: "ステータス",
       render: (program) => (
-        <Badge variant={statusVariants[program.status] || "secondary"}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[program.status] || statusColors.draft}`}>
           {statusLabels[program.status] || program.status}
-        </Badge>
+        </span>
       ),
     },
     {
       key: "play_count",
       header: "再生数",
-      render: (program) => formatNumber(program.play_count),
+      render: (program) => (
+        <span className="text-sm tabular-nums text-crate-text-primary">{formatNumber(program.play_count)}</span>
+      ),
     },
     {
       key: "favorite_count",
       header: "お気に入り",
-      render: (program) => formatNumber(program.favorite_count),
+      render: (program) => (
+        <span className="text-sm tabular-nums text-crate-text-secondary">{formatNumber(program.favorite_count)}</span>
+      ),
     },
     {
       key: "track_count",
       header: "楽曲数",
-      render: (program) => program.track_count,
+      render: (program) => (
+        <span className="text-sm text-crate-text-secondary">{program.track_count}</span>
+      ),
     },
     {
       key: "genre",
       header: "ジャンル",
-      render: (program) => program.genre || "-",
+      render: (program) => (
+        <span className="text-sm text-crate-text-secondary">{program.genre || "-"}</span>
+      ),
     },
     {
       key: "created_at",
       header: "作成日",
-      render: (program) => formatDate(program.created_at),
+      render: (program) => (
+        <span className="text-sm text-crate-text-secondary">{formatDate(program.created_at)}</span>
+      ),
     },
   ];
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-crate-surface" />
         <div className="grid gap-6 md:grid-cols-3">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64 md:col-span-2" />
+          <div className="h-64 animate-pulse rounded-xl bg-crate-surface" />
+          <div className="h-64 animate-pulse rounded-xl bg-crate-surface md:col-span-2" />
         </div>
-        <Skeleton className="h-64" />
+        <div className="h-64 animate-pulse rounded-xl bg-crate-surface" />
       </div>
     );
   }
@@ -147,218 +146,201 @@ export default function BroadcasterDetailPage() {
   if (!broadcaster) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-sm text-crate-text-secondary hover:text-crate-text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
           戻る
-        </Button>
-        <p className="text-muted-foreground">配信者が見つかりません。</p>
+        </button>
+        <p className="text-crate-text-tertiary">配信者が見つかりません。</p>
       </div>
     );
   }
 
   const stats = broadcaster.stats;
 
+  const statCards = [
+    { icon: Radio, label: "番組数", value: formatNumber(stats.total_programs), color: "text-crate-accent", bgColor: "bg-crate-accent/10" },
+    { icon: Play, label: "総再生数", value: formatNumber(stats.total_plays), color: "text-crate-success", bgColor: "bg-crate-success/10" },
+    { icon: Heart, label: "総お気に入り", value: formatNumber(stats.total_favorites), color: "text-crate-error", bgColor: "bg-crate-error/10" },
+    { icon: Users, label: "フォロワー", value: formatNumber(stats.follower_count), color: "text-purple-400", bgColor: "bg-purple-400/10" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <button
+            onClick={() => router.back()}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-crate-border bg-crate-surface text-crate-text-secondary transition-colors hover:bg-crate-elevated hover:text-crate-text-primary"
+          >
             <ArrowLeft className="h-4 w-4" />
-          </Button>
+          </button>
           <div>
-            <h1 className="text-2xl font-bold">配信者詳細</h1>
-            <p className="text-muted-foreground">ID: {broadcaster.id}</p>
+            <h1 className="font-heading text-2xl font-bold text-crate-text-primary">配信者詳細</h1>
+            <p className="text-xs font-mono text-crate-text-tertiary">ID: {broadcaster.id}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {broadcaster.is_active ? (
-            <Button variant="outline" onClick={handleSuspend}>
-              <UserX className="mr-2 h-4 w-4" />
+            <button
+              onClick={handleSuspend}
+              className="flex items-center gap-2 rounded-lg border border-crate-border bg-crate-surface px-4 py-2 text-sm text-crate-error transition-colors hover:bg-crate-error/10"
+            >
+              <UserX className="h-4 w-4" />
               アカウント停止
-            </Button>
+            </button>
           ) : (
-            <Button variant="outline" onClick={handleActivate}>
-              <UserCheck className="mr-2 h-4 w-4" />
+            <button
+              onClick={handleActivate}
+              className="flex items-center gap-2 rounded-lg border border-crate-border bg-crate-surface px-4 py-2 text-sm text-crate-success transition-colors hover:bg-crate-success/10"
+            >
+              <UserCheck className="h-4 w-4" />
               有効化
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Stats Summary */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
-              <Radio className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        {statCards.map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-crate-border bg-crate-surface p-4">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.bgColor}`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-xs text-crate-text-tertiary">{stat.label}</p>
+                <p className="text-2xl font-bold text-crate-text-primary">{stat.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">番組数</p>
-              <p className="text-2xl font-bold">{formatNumber(stats.total_programs)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900">
-              <Play className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">総再生数</p>
-              <p className="text-2xl font-bold">{formatNumber(stats.total_plays)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-lg bg-red-100 p-2 dark:bg-red-900">
-              <Heart className="h-5 w-5 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">総お気に入り</p>
-              <p className="text-2xl font-bold">{formatNumber(stats.total_favorites)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900">
-              <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">フォロワー</p>
-              <p className="text-2xl font-bold">{formatNumber(stats.follower_count)}</p>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Profile Card */}
-        <Card className="md:col-span-1">
-          <CardContent className="flex flex-col items-center pt-6">
-            <Avatar className="h-20 w-20">
+        <div className="rounded-xl border border-crate-border bg-crate-surface p-6 md:col-span-1">
+          <div className="flex flex-col items-center">
+            <Avatar className="h-20 w-20 border-2 border-crate-border bg-crate-elevated">
               {avatarUrl && <AvatarImage src={avatarUrl} />}
-              <AvatarFallback className="text-2xl">
+              <AvatarFallback className="bg-crate-elevated text-2xl text-crate-text-secondary">
                 {displayName.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <h2 className="mt-4 text-xl font-semibold">{displayName}</h2>
+            <h2 className="mt-4 text-xl font-semibold text-crate-text-primary">{displayName}</h2>
             {broadcaster.profile?.message && (
-              <p className="mt-1 text-center text-sm text-muted-foreground">
+              <p className="mt-1 text-center text-sm text-crate-text-secondary">
                 {broadcaster.profile.message}
               </p>
             )}
             <div className="mt-3 flex gap-2">
-              <Badge
-                variant={broadcaster.is_active ? "success" : "destructive"}
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  broadcaster.is_active
+                    ? "bg-crate-success/15 text-crate-success"
+                    : "bg-crate-error/15 text-crate-error"
+                }`}
               >
                 {broadcaster.is_active ? "有効" : "停止中"}
-              </Badge>
+              </span>
               {broadcaster.is_admin && (
-                <Badge variant="default">管理者</Badge>
+                <span className="inline-flex items-center rounded-full bg-crate-accent/15 px-2.5 py-0.5 text-xs font-medium text-crate-accent">
+                  管理者
+                </span>
               )}
             </div>
-            <Separator className="my-4" />
+
+            <div className="my-4 h-px w-full bg-crate-border" />
+
             <div className="w-full space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{broadcaster.email}</span>
+                <Mail className="h-4 w-4 text-crate-text-tertiary" />
+                <span className="text-crate-text-secondary">{broadcaster.email}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">
+                <Calendar className="h-4 w-4 text-crate-text-tertiary" />
+                <span className="text-crate-text-secondary">
                   {formatDateTime(broadcaster.created_at)} 登録
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">
+                <Users className="h-4 w-4 text-crate-text-tertiary" />
+                <span className="text-crate-text-secondary">
                   フォロワー {formatNumber(stats.follower_count)} / フォロー中 {formatNumber(stats.following_count)}
                 </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Details */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">詳細情報</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">ユーザーID</span>
-                <span className="font-mono">{broadcaster.id}</span>
+        <div className="rounded-xl border border-crate-border bg-crate-surface md:col-span-2">
+          <div className="border-b border-crate-border px-5 py-4">
+            <h3 className="text-sm font-semibold text-crate-text-primary">詳細情報</h3>
+          </div>
+          <div className="p-5 space-y-3">
+            {[
+              { label: "ユーザーID", value: <span className="font-mono">{broadcaster.id}</span> },
+              { label: "メールアドレス", value: broadcaster.email },
+              { label: "アクティブ", value: broadcaster.is_active ? "はい" : "いいえ" },
+              { label: "メール認証", value: broadcaster.email_verified ? "認証済み" : "未認証" },
+              { label: "登録日時", value: formatDateTime(broadcaster.created_at) },
+              { label: "最終更新", value: formatDateTime(broadcaster.updated_at) },
+            ].map((row) => (
+              <div key={row.label} className="flex justify-between text-sm">
+                <span className="text-crate-text-tertiary">{row.label}</span>
+                <span className="text-crate-text-primary">{row.value}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">メールアドレス</span>
-                <span>{broadcaster.email}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">アクティブ</span>
-                <span>{broadcaster.is_active ? "はい" : "いいえ"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">メール認証</span>
-                <span>{broadcaster.email_verified ? "認証済み" : "未認証"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">登録日時</span>
-                <span>{formatDateTime(broadcaster.created_at)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">最終更新</span>
-                <span>{formatDateTime(broadcaster.updated_at)}</span>
-              </div>
-            </div>
+            ))}
 
             {broadcaster.profile && (
               <>
-                <Separator className="my-6" />
-                <h3 className="mb-3 text-sm font-semibold">プロフィール</h3>
-                <div className="space-y-2">
+                <div className="my-4 h-px w-full bg-crate-border" />
+                <h4 className="mb-3 text-sm font-semibold text-crate-text-primary">プロフィール</h4>
+                <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">ニックネーム</span>
-                    <span>{broadcaster.profile.nickname}</span>
+                    <span className="text-crate-text-tertiary">ニックネーム</span>
+                    <span className="text-crate-text-primary">{broadcaster.profile.nickname}</span>
                   </div>
                   {broadcaster.profile.message && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">メッセージ</span>
-                      <span>{broadcaster.profile.message}</span>
+                      <span className="text-crate-text-tertiary">メッセージ</span>
+                      <span className="text-crate-text-primary">{broadcaster.profile.message}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">フォロワー数</span>
-                    <span>{formatNumber(stats.follower_count)}</span>
+                    <span className="text-crate-text-tertiary">フォロワー数</span>
+                    <span className="text-crate-text-primary">{formatNumber(stats.follower_count)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">フォロー中</span>
-                    <span>{formatNumber(stats.following_count)}</span>
+                    <span className="text-crate-text-tertiary">フォロー中</span>
+                    <span className="text-crate-text-primary">{formatNumber(stats.following_count)}</span>
                   </div>
                 </div>
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Programs Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">番組一覧</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-crate-border bg-crate-surface">
+        <div className="border-b border-crate-border px-5 py-4">
+          <h3 className="text-sm font-semibold text-crate-text-primary">番組一覧</h3>
+        </div>
+        <div className="p-5">
           <DataTable
             columns={programColumns}
             data={broadcaster.programs}
             isLoading={false}
             emptyMessage="番組がありません"
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        crate: {
+          void: '#0A0A0A',
+          surface: '#111111',
+          elevated: '#1A1A1A',
+          subtle: '#1A1A2E',
+          accent: '#7C83FF',
+          'accent-dim': '#5A5FCC',
+          'text-primary': '#F0F0F0',
+          'text-secondary': '#888888',
+          'text-tertiary': '#555555',
+          'text-muted': '#444444',
+          border: '#222222',
+          error: '#FF4D4D',
+          success: '#4DFF88',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -47,6 +62,13 @@ module.exports = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        card: "10px",
+        input: "8px",
+        pill: "50px",
+      },
+      fontFamily: {
+        heading: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        body: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
       },
       keyframes: {
         "animate-in": {

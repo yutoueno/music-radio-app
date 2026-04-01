@@ -2,17 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Music } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 
@@ -58,22 +47,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary">
-            <Music className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl">Music Radio Admin</CardTitle>
-          <CardDescription>
+    <div className="flex min-h-screen items-center justify-center bg-crate-void px-4">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo */}
+        <div className="text-center">
+          <h1 className="font-heading text-5xl font-bold tracking-tight text-crate-text-primary">
+            CRATE
+          </h1>
+          <p className="mt-2 text-sm font-semibold uppercase tracking-[0.3em] text-crate-accent">
+            ADMIN
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-xl border border-crate-border bg-crate-surface p-8">
+          <p className="mb-6 text-center text-sm text-crate-text-secondary">
             管理画面にログインしてください
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">メールアドレス</Label>
-              <Input
+              <label
+                htmlFor="email"
+                className="block text-xs font-medium uppercase tracking-wider text-crate-text-secondary"
+              >
+                メールアドレス
+              </label>
+              <input
                 id="email"
                 type="email"
                 placeholder="admin@example.com"
@@ -81,11 +81,18 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 autoComplete="email"
+                className="w-full rounded-lg border border-crate-border bg-crate-elevated px-4 py-3 text-sm text-crate-text-primary placeholder:text-crate-text-tertiary outline-none transition-colors focus:border-crate-accent focus:ring-1 focus:ring-crate-accent disabled:opacity-50"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">パスワード</Label>
-              <Input
+              <label
+                htmlFor="password"
+                className="block text-xs font-medium uppercase tracking-wider text-crate-text-secondary"
+              >
+                パスワード
+              </label>
+              <input
                 id="password"
                 type="password"
                 placeholder="パスワードを入力"
@@ -93,21 +100,31 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 autoComplete="current-password"
+                className="w-full rounded-lg border border-crate-border bg-crate-elevated px-4 py-3 text-sm text-crate-text-primary placeholder:text-crate-text-tertiary outline-none transition-colors focus:border-crate-accent focus:ring-1 focus:ring-crate-accent disabled:opacity-50"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full rounded-lg bg-crate-accent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-crate-accent-dim disabled:opacity-50"
+            >
               {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   ログイン中...
                 </span>
               ) : (
                 "ログイン"
               )}
-            </Button>
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        <p className="text-center text-xs text-crate-text-tertiary">
+          CRATE Admin Panel
+        </p>
+      </div>
     </div>
   );
 }

@@ -2,18 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, MoreHorizontal, EyeOff, Trash2 } from "lucide-react";
+import { Search, MoreHorizontal, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,10 +23,10 @@ import {
 import { formatDate, formatNumber, formatDuration } from "@/lib/utils";
 import type { Program } from "@/types";
 
-const statusMap: Record<string, { label: string; variant: "success" | "warning" | "secondary" }> = {
-  published: { label: "公開中", variant: "success" },
-  archived: { label: "アーカイブ", variant: "warning" },
-  draft: { label: "下書き", variant: "secondary" },
+const statusMap: Record<string, { label: string; colorClass: string }> = {
+  published: { label: "公開中", colorClass: "bg-crate-success/15 text-crate-success" },
+  archived: { label: "アーカイブ", colorClass: "bg-yellow-500/15 text-yellow-400" },
+  draft: { label: "下書き", colorClass: "bg-crate-elevated text-crate-text-tertiary" },
 };
 
 const sortOptions = [
@@ -73,7 +64,6 @@ export default function ProgramsPage() {
   let programs = data?.data || [];
   const meta = data?.meta;
 
-  // Client-side search filter
   if (search) {
     const s = search.toLowerCase();
     programs = programs.filter(
@@ -103,19 +93,17 @@ export default function ProgramsPage() {
       render: (program) => (
         <Link
           href={`/programs/${program.id}`}
-          className="flex items-center gap-3 hover:underline"
+          className="flex items-center gap-3 hover:opacity-80"
         >
-          <Avatar className="h-10 w-10 rounded-md">
-            {program.thumbnail_url && (
-              <AvatarImage src={program.thumbnail_url} />
-            )}
-            <AvatarFallback className="rounded-md text-xs">
+          <Avatar className="h-10 w-10 rounded-lg border border-crate-border bg-crate-elevated">
+            {program.thumbnail_url && <AvatarImage src={program.thumbnail_url} className="rounded-lg" />}
+            <AvatarFallback className="rounded-lg bg-crate-elevated text-xs text-crate-text-secondary">
               {program.title.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{program.title}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="font-medium text-crate-text-primary">{program.title}</p>
+            <p className="text-xs text-crate-text-tertiary">
               {program.user_nickname || program.user_id}
             </p>
           </div>
@@ -126,34 +114,50 @@ export default function ProgramsPage() {
       key: "status",
       header: "ステータス",
       render: (program) => {
-        const s = statusMap[program.status] || { label: program.status, variant: "secondary" as const };
-        return <Badge variant={s.variant}>{s.label}</Badge>;
+        const s = statusMap[program.status] || { label: program.status, colorClass: "bg-crate-elevated text-crate-text-tertiary" };
+        return (
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.colorClass}`}>
+            {s.label}
+          </span>
+        );
       },
     },
     {
       key: "genre",
       header: "ジャンル",
-      render: (program) => program.genre || "-",
+      render: (program) => (
+        <span className="text-sm text-crate-text-secondary">{program.genre || "-"}</span>
+      ),
     },
     {
       key: "duration_seconds",
       header: "再生時間",
-      render: (program) => program.duration_seconds ? formatDuration(program.duration_seconds) : "-",
+      render: (program) => (
+        <span className="text-sm text-crate-text-secondary">
+          {program.duration_seconds ? formatDuration(program.duration_seconds) : "-"}
+        </span>
+      ),
     },
     {
       key: "play_count",
       header: "再生数",
-      render: (program) => formatNumber(program.play_count),
+      render: (program) => (
+        <span className="text-sm tabular-nums text-crate-text-primary">{formatNumber(program.play_count)}</span>
+      ),
     },
     {
       key: "favorite_count",
       header: "お気に入り",
-      render: (program) => formatNumber(program.favorite_count),
+      render: (program) => (
+        <span className="text-sm tabular-nums text-crate-text-secondary">{formatNumber(program.favorite_count)}</span>
+      ),
     },
     {
       key: "created_at",
       header: "作成日",
-      render: (program) => formatDate(program.created_at),
+      render: (program) => (
+        <span className="text-sm text-crate-text-secondary">{formatDate(program.created_at)}</span>
+      ),
     },
     {
       key: "actions",
@@ -162,17 +166,17 @@ export default function ProgramsPage() {
       render: (program) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-crate-text-tertiary hover:bg-crate-elevated hover:text-crate-text-primary">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
+          <DropdownMenuContent align="end" className="border-crate-border bg-crate-elevated text-crate-text-primary">
+            <DropdownMenuItem asChild className="focus:bg-crate-surface">
               <Link href={`/programs/${program.id}`}>詳細を表示</Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-crate-border" />
             {program.status === "published" && (
-              <DropdownMenuItem onClick={() => handleArchive(program)}>
+              <DropdownMenuItem onClick={() => handleArchive(program)} className="text-yellow-400 focus:bg-yellow-500/10 focus:text-yellow-400">
                 <EyeOff className="mr-2 h-4 w-4" />
                 アーカイブにする
               </DropdownMenuItem>
@@ -183,84 +187,63 @@ export default function ProgramsPage() {
     },
   ];
 
+  const selectClass = "rounded-lg border border-crate-border bg-crate-elevated px-3 py-2 text-sm text-crate-text-primary outline-none focus:border-crate-accent";
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">番組管理</h1>
-        <p className="text-muted-foreground">登録番組の一覧と管理</p>
+        <h1 className="font-heading text-2xl font-bold text-crate-text-primary">番組管理</h1>
+        <p className="text-sm text-crate-text-secondary">登録番組の一覧と管理</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-crate-text-tertiary" />
+          <input
             placeholder="番組名や配信者名で検索..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
-            className="pl-9"
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-crate-border bg-crate-elevated py-2 pl-9 pr-4 text-sm text-crate-text-primary placeholder:text-crate-text-tertiary outline-none transition-colors focus:border-crate-accent"
           />
         </div>
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            setStatus(v === "all" ? "" : v);
-            setPage(1);
-          }}
+        <select
+          value={status || "all"}
+          onChange={(e) => { setStatus(e.target.value === "all" ? "" : e.target.value); setPage(1); }}
+          className={selectClass}
         >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="ステータス" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">すべて</SelectItem>
-            <SelectItem value="published">公開中</SelectItem>
-            <SelectItem value="archived">アーカイブ</SelectItem>
-            <SelectItem value="draft">下書き</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={genre}
-          onValueChange={(v) => {
-            setGenre(v === "all" ? "" : v);
-            setPage(1);
-          }}
+          <option value="all">すべて</option>
+          <option value="published">公開中</option>
+          <option value="archived">アーカイブ</option>
+          <option value="draft">下書き</option>
+        </select>
+        <select
+          value={genre || "all"}
+          onChange={(e) => { setGenre(e.target.value === "all" ? "" : e.target.value); setPage(1); }}
+          className={selectClass}
         >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="ジャンル" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">すべてのジャンル</SelectItem>
-            {genres.map((g) => (
-              <SelectItem key={g.genre} value={g.genre}>
-                {g.genre} ({g.count})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
+          <option value="all">すべてのジャンル</option>
+          {genres.map((g) => (
+            <option key={g.genre} value={g.genre}>
+              {g.genre} ({g.count})
+            </option>
+          ))}
+        </select>
+        <select
           value={sort}
-          onValueChange={(v) => {
-            setSort(v);
-            setPage(1);
-          }}
+          onChange={(e) => { setSort(e.target.value); setPage(1); }}
+          className={selectClass}
         >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="並び順" />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {sortOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border bg-card">
+      <div className="rounded-xl border border-crate-border bg-crate-surface">
         <DataTable
           columns={columns}
           data={programs}

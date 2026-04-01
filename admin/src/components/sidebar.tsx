@@ -10,11 +10,9 @@ import {
   MessageSquare,
   BarChart3,
   LogOut,
-  Music,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-import { Separator } from "@/components/ui/separator";
 
 const navigation = [
   { name: "ダッシュボード", href: "/dashboard", icon: LayoutDashboard },
@@ -30,17 +28,19 @@ export function Sidebar() {
   const { logout } = useAuthStore();
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-card">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-2 px-6">
-        <Music className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold">Music Radio</span>
-        <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+    <div className="flex h-full w-64 flex-col border-r border-crate-border bg-crate-surface">
+      {/* CRATE Logo */}
+      <div className="flex h-16 items-center gap-3 px-6">
+        <span className="font-heading text-xl font-bold uppercase tracking-[4px] text-crate-text-primary">
+          CRATE
+        </span>
+        <span className="rounded-pill bg-crate-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
           ADMIN
         </span>
       </div>
 
-      <Separator />
+      {/* Separator */}
+      <div className="mx-4 h-px bg-crate-border" />
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -52,28 +52,35 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-crate-accent/10 text-crate-accent"
+                  : "text-crate-text-tertiary hover:bg-crate-elevated hover:text-crate-text-secondary"
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon
+                className={cn(
+                  "h-[18px] w-[18px]",
+                  isActive ? "text-crate-accent" : "text-crate-text-tertiary"
+                )}
+                strokeWidth={1.5}
+              />
               {item.name}
             </Link>
           );
         })}
       </nav>
 
-      <Separator />
+      {/* Separator */}
+      <div className="mx-4 h-px bg-crate-border" />
 
       {/* Logout */}
       <div className="p-3">
         <button
           onClick={logout}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-crate-text-tertiary transition-all duration-150 hover:bg-crate-elevated hover:text-crate-text-secondary"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-[18px] w-[18px]" strokeWidth={1.5} />
           ログアウト
         </button>
       </div>

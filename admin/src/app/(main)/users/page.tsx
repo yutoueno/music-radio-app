@@ -4,16 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, MoreHorizontal, UserX, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,11 +47,9 @@ export default function UsersPage() {
   const suspendUser = useSuspendUser();
   const activateUser = useActivateUser();
 
-  // Client-side filtering since backend doesn't support search/filter params
   let users = data?.data || [];
   const meta = data?.meta;
 
-  // Client-side search filter
   if (search) {
     const s = search.toLowerCase();
     users = users.filter(
@@ -69,7 +59,6 @@ export default function UsersPage() {
     );
   }
 
-  // Client-side status filter
   if (statusFilter === "active") {
     users = users.filter((u) => u.is_active);
   } else if (statusFilter === "suspended") {
@@ -117,17 +106,17 @@ export default function UsersPage() {
       render: (user) => (
         <Link
           href={`/users/${user.id}`}
-          className="flex items-center gap-3 hover:underline"
+          className="flex items-center gap-3 hover:opacity-80"
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 border border-crate-border bg-crate-elevated">
             {getUserAvatarUrl(user) && <AvatarImage src={getUserAvatarUrl(user)!} />}
-            <AvatarFallback className="text-xs">
+            <AvatarFallback className="bg-crate-elevated text-xs text-crate-text-secondary">
               {getUserDisplayName(user).charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{getUserDisplayName(user)}</p>
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+            <p className="font-medium text-crate-text-primary">{getUserDisplayName(user)}</p>
+            <p className="text-xs text-crate-text-tertiary">{user.email}</p>
           </div>
         </Link>
       ),
@@ -136,35 +125,55 @@ export default function UsersPage() {
       key: "is_admin",
       header: "ロール",
       render: (user) => (
-        <Badge variant={user.is_admin ? "default" : "secondary"}>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            user.is_admin
+              ? "bg-crate-accent/15 text-crate-accent"
+              : "bg-crate-elevated text-crate-text-secondary"
+          }`}
+        >
           {user.is_admin ? "管理者" : "ユーザー"}
-        </Badge>
+        </span>
       ),
     },
     {
       key: "is_active",
       header: "ステータス",
       render: (user) => (
-        <Badge
-          variant={user.is_active ? "success" : "destructive"}
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            user.is_active
+              ? "bg-crate-success/15 text-crate-success"
+              : "bg-crate-error/15 text-crate-error"
+          }`}
         >
           {user.is_active ? "有効" : "停止中"}
-        </Badge>
+        </span>
       ),
     },
     {
       key: "email_verified",
       header: "メール認証",
       render: (user) => (
-        <Badge variant={user.email_verified ? "success" : "secondary"}>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            user.email_verified
+              ? "bg-crate-success/15 text-crate-success"
+              : "bg-crate-elevated text-crate-text-tertiary"
+          }`}
+        >
           {user.email_verified ? "認証済み" : "未認証"}
-        </Badge>
+        </span>
       ),
     },
     {
       key: "created_at",
       header: "登録日",
-      render: (user) => formatDate(user.created_at),
+      render: (user) => (
+        <span className="text-sm text-crate-text-secondary">
+          {formatDate(user.created_at)}
+        </span>
+      ),
     },
     {
       key: "actions",
@@ -173,22 +182,22 @@ export default function UsersPage() {
       render: (user) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-crate-text-tertiary hover:bg-crate-elevated hover:text-crate-text-primary">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
+          <DropdownMenuContent align="end" className="border-crate-border bg-crate-elevated text-crate-text-primary">
+            <DropdownMenuItem asChild className="focus:bg-crate-surface">
               <Link href={`/users/${user.id}`}>詳細を表示</Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-crate-border" />
             {user.is_active ? (
-              <DropdownMenuItem onClick={() => handleSuspend(user)}>
+              <DropdownMenuItem onClick={() => handleSuspend(user)} className="text-crate-error focus:bg-crate-error/10 focus:text-crate-error">
                 <UserX className="mr-2 h-4 w-4" />
                 アカウント停止
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem onClick={() => handleActivate(user)}>
+              <DropdownMenuItem onClick={() => handleActivate(user)} className="text-crate-success focus:bg-crate-success/10 focus:text-crate-success">
                 <UserCheck className="mr-2 h-4 w-4" />
                 有効化
               </DropdownMenuItem>
@@ -202,8 +211,8 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">ユーザー管理</h1>
-        <p className="text-muted-foreground">
+        <h1 className="font-heading text-2xl font-bold text-crate-text-primary">ユーザー管理</h1>
+        <p className="text-sm text-crate-text-secondary">
           登録ユーザーの一覧と管理
         </p>
       </div>
@@ -211,35 +220,27 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-crate-text-tertiary" />
+          <input
             placeholder="名前やメールで検索..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
-            className="pl-9"
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-crate-border bg-crate-elevated py-2 pl-9 pr-4 text-sm text-crate-text-primary placeholder:text-crate-text-tertiary outline-none transition-colors focus:border-crate-accent"
           />
         </div>
-        <Select
+        <select
           value={statusFilter}
-          onValueChange={(v) => {
-            setStatusFilter(v === "all" ? "" : v);
-          }}
+          onChange={(e) => setStatusFilter(e.target.value === "all" ? "" : e.target.value)}
+          className="rounded-lg border border-crate-border bg-crate-elevated px-3 py-2 text-sm text-crate-text-primary outline-none focus:border-crate-accent"
         >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="ステータス" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">すべて</SelectItem>
-            <SelectItem value="active">有効</SelectItem>
-            <SelectItem value="suspended">停止中</SelectItem>
-          </SelectContent>
-        </Select>
+          <option value="all">すべて</option>
+          <option value="active">有効</option>
+          <option value="suspended">停止中</option>
+        </select>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border bg-card">
+      <div className="rounded-xl border border-crate-border bg-crate-surface">
         <DataTable
           columns={columns}
           data={users}

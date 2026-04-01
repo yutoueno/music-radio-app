@@ -1,14 +1,5 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,64 +32,75 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-1 p-4">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <div key={i} className="h-12 w-full animate-pulse rounded-lg bg-crate-elevated" />
         ))}
       </div>
     );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {columns.map((column) => (
-            <TableHead key={column.key} className={column.className}>
-              {column.sortable && onSort ? (
-                <button
-                  className="flex items-center gap-1 hover:text-foreground"
-                  onClick={() => onSort(column.key)}
-                >
-                  {column.header}
-                  <ArrowUpDown
-                    className={cn(
-                      "h-3 w-3",
-                      sortBy === column.key
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    )}
-                  />
-                </button>
-              ) : (
-                column.header
-              )}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.length === 0 ? (
-          <TableRow>
-            <TableCell
-              colSpan={columns.length}
-              className="h-24 text-center text-muted-foreground"
-            >
-              {emptyMessage}
-            </TableCell>
-          </TableRow>
-        ) : (
-          data.map((item, index) => (
-            <TableRow key={index}>
-              {columns.map((column) => (
-                <TableCell key={column.key} className={column.className}>
-                  {column.render(item)}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-crate-border bg-crate-surface">
+            {columns.map((column) => (
+              <th
+                key={column.key}
+                className={cn(
+                  "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-crate-text-tertiary",
+                  column.className
+                )}
+              >
+                {column.sortable && onSort ? (
+                  <button
+                    className="flex items-center gap-1 hover:text-crate-text-primary"
+                    onClick={() => onSort(column.key)}
+                  >
+                    {column.header}
+                    <ArrowUpDown
+                      className={cn(
+                        "h-3 w-3",
+                        sortBy === column.key
+                          ? "text-crate-accent"
+                          : "text-crate-text-tertiary"
+                      )}
+                    />
+                  </button>
+                ) : (
+                  column.header
+                )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.length === 0 ? (
+            <tr>
+              <td
+                colSpan={columns.length}
+                className="h-24 text-center text-sm text-crate-text-tertiary"
+              >
+                {emptyMessage}
+              </td>
+            </tr>
+          ) : (
+            data.map((item, index) => (
+              <tr
+                key={index}
+                className="border-b border-crate-border/50 bg-crate-void transition-colors last:border-0 hover:bg-crate-elevated/50"
+              >
+                {columns.map((column) => (
+                  <td key={column.key} className={cn("px-4 py-3 text-sm", column.className)}>
+                    {column.render(item)}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

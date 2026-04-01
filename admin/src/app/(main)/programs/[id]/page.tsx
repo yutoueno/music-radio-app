@@ -8,22 +8,8 @@ import {
   PlayCircle,
   Heart,
   Music,
-  ListMusic,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import {
   useProgram,
@@ -32,10 +18,10 @@ import {
 } from "@/hooks/use-api";
 import { formatDateTime, formatNumber, formatDuration } from "@/lib/utils";
 
-const statusMap: Record<string, { label: string; variant: "success" | "warning" | "secondary" }> = {
-  published: { label: "公開中", variant: "success" },
-  archived: { label: "アーカイブ", variant: "warning" },
-  draft: { label: "下書き", variant: "secondary" },
+const statusMap: Record<string, { label: string; colorClass: string }> = {
+  published: { label: "公開中", colorClass: "bg-crate-success/15 text-crate-success" },
+  archived: { label: "アーカイブ", colorClass: "bg-yellow-500/15 text-yellow-400" },
+  draft: { label: "下書き", colorClass: "bg-crate-elevated text-crate-text-tertiary" },
 };
 
 export default function ProgramDetailPage() {
@@ -64,8 +50,8 @@ export default function ProgramDetailPage() {
   if (programLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64" />
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-crate-surface" />
+        <div className="h-64 animate-pulse rounded-xl bg-crate-surface" />
       </div>
     );
   }
@@ -73,214 +59,185 @@ export default function ProgramDetailPage() {
   if (!program) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-sm text-crate-text-secondary hover:text-crate-text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
           戻る
-        </Button>
-        <p className="text-muted-foreground">番組が見つかりません。</p>
+        </button>
+        <p className="text-crate-text-tertiary">番組が見つかりません。</p>
       </div>
     );
   }
 
-  const s = statusMap[program.status] || { label: program.status, variant: "secondary" as const };
+  const s = statusMap[program.status] || { label: program.status, colorClass: "bg-crate-elevated text-crate-text-tertiary" };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <button
+            onClick={() => router.back()}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-crate-border bg-crate-surface text-crate-text-secondary transition-colors hover:bg-crate-elevated hover:text-crate-text-primary"
+          >
             <ArrowLeft className="h-4 w-4" />
-          </Button>
+          </button>
           <div>
-            <h1 className="text-2xl font-bold">番組詳細</h1>
-            <p className="text-muted-foreground">ID: {program.id}</p>
+            <h1 className="font-heading text-2xl font-bold text-crate-text-primary">番組詳細</h1>
+            <p className="text-xs font-mono text-crate-text-tertiary">ID: {program.id}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {program.status === "published" && (
-            <Button variant="outline" onClick={handleArchive}>
-              <EyeOff className="mr-2 h-4 w-4" />
+            <button
+              onClick={handleArchive}
+              className="flex items-center gap-2 rounded-lg border border-crate-border bg-crate-surface px-4 py-2 text-sm text-yellow-400 transition-colors hover:bg-yellow-500/10"
+            >
+              <EyeOff className="h-4 w-4" />
               アーカイブにする
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Program Info */}
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center">
-              <Avatar className="h-32 w-32 rounded-lg">
-                {program.thumbnail_url && (
-                  <AvatarImage src={program.thumbnail_url} className="rounded-lg" />
-                )}
-                <AvatarFallback className="rounded-lg text-3xl">
-                  {program.title.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <h2 className="mt-4 text-center text-xl font-semibold">
-                {program.title}
-              </h2>
-              <Badge variant={s.variant} className="mt-2">
-                {s.label}
-              </Badge>
-            </div>
-            <Separator className="my-4" />
-            <div className="space-y-3">
-              <div className="text-sm">
-                <span className="text-muted-foreground">配信者: </span>
-                <span className="font-medium">{program.user_nickname || program.user_id}</span>
-              </div>
-              {program.description && (
-                <p className="text-sm text-muted-foreground">
-                  {program.description}
-                </p>
+        {/* Thumbnail & Title */}
+        <div className="rounded-xl border border-crate-border bg-crate-surface p-6 md:col-span-1">
+          <div className="flex flex-col items-center">
+            <Avatar className="h-32 w-32 rounded-xl border-2 border-crate-border bg-crate-elevated">
+              {program.thumbnail_url && (
+                <AvatarImage src={program.thumbnail_url} className="rounded-xl" />
               )}
+              <AvatarFallback className="rounded-xl bg-crate-elevated text-3xl text-crate-text-tertiary">
+                {program.title.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <h2 className="mt-4 text-center text-xl font-semibold text-crate-text-primary">
+              {program.title}
+            </h2>
+            <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.colorClass}`}>
+              {s.label}
+            </span>
+          </div>
+          <div className="my-4 h-px w-full bg-crate-border" />
+          <div className="space-y-3">
+            <div className="text-sm">
+              <span className="text-crate-text-tertiary">配信者: </span>
+              <span className="font-medium text-crate-text-primary">{program.user_nickname || program.user_id}</span>
             </div>
-          </CardContent>
-        </Card>
+            {program.description && (
+              <p className="text-sm text-crate-text-secondary">
+                {program.description}
+              </p>
+            )}
+          </div>
+        </div>
 
         <div className="space-y-6 md:col-span-2">
           {/* Stats */}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card>
-              <CardContent className="flex items-center gap-3 pt-6">
-                <div className="rounded-full bg-primary/10 p-2">
-                  <PlayCircle className="h-4 w-4 text-primary" />
+            {[
+              { icon: PlayCircle, label: "再生数", value: formatNumber(program.play_count) },
+              { icon: Heart, label: "お気に入り数", value: formatNumber(program.favorite_count) },
+              { icon: Clock, label: "再生時間", value: program.duration_seconds ? formatDuration(program.duration_seconds) : "-" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-crate-border bg-crate-surface p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-crate-accent/10">
+                    <stat.icon className="h-4 w-4 text-crate-accent" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-crate-text-tertiary">{stat.label}</p>
+                    <p className="text-lg font-bold text-crate-text-primary">{stat.value}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">再生数</p>
-                  <p className="text-lg font-bold">
-                    {formatNumber(program.play_count)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center gap-3 pt-6">
-                <div className="rounded-full bg-primary/10 p-2">
-                  <Heart className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">お気に入り数</p>
-                  <p className="text-lg font-bold">
-                    {formatNumber(program.favorite_count)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center gap-3 pt-6">
-                <div className="rounded-full bg-primary/10 p-2">
-                  <Clock className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">再生時間</p>
-                  <p className="text-lg font-bold">
-                    {program.duration_seconds
-                      ? formatDuration(program.duration_seconds)
-                      : "-"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            ))}
           </div>
 
           {/* Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">番組情報</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">番組ID</span>
-                <span className="font-mono">{program.id}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">配信者ID</span>
-                <span className="font-mono">{program.user_id}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">番組タイプ</span>
-                <span>{program.program_type}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">作成日時</span>
-                <span>{formatDateTime(program.created_at)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">最終更新</span>
-                <span>{formatDateTime(program.updated_at)}</span>
-              </div>
-              {program.scheduled_at && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">配信予定</span>
-                  <span>{formatDateTime(program.scheduled_at)}</span>
+          <div className="rounded-xl border border-crate-border bg-crate-surface">
+            <div className="border-b border-crate-border px-5 py-4">
+              <h3 className="text-sm font-semibold text-crate-text-primary">番組情報</h3>
+            </div>
+            <div className="p-5 space-y-3">
+              {[
+                { label: "番組ID", value: <span className="font-mono">{program.id}</span> },
+                { label: "配信者ID", value: <span className="font-mono">{program.user_id}</span> },
+                { label: "番組タイプ", value: program.program_type },
+                { label: "作成日時", value: formatDateTime(program.created_at) },
+                { label: "最終更新", value: formatDateTime(program.updated_at) },
+                ...(program.scheduled_at
+                  ? [{ label: "配信予定", value: formatDateTime(program.scheduled_at) }]
+                  : []),
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between text-sm">
+                  <span className="text-crate-text-tertiary">{row.label}</span>
+                  <span className="text-crate-text-primary">{row.value}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
 
           {/* Track List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">トラック一覧</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-xl border border-crate-border bg-crate-surface">
+            <div className="border-b border-crate-border px-5 py-4">
+              <h3 className="text-sm font-semibold text-crate-text-primary">トラック一覧</h3>
+            </div>
+            <div className="p-5">
               {tracksLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12" />
+                    <div key={i} className="h-12 animate-pulse rounded-lg bg-crate-elevated" />
                   ))}
                 </div>
               ) : tracks.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p className="py-8 text-center text-sm text-crate-text-tertiary">
                   トラックがありません
                 </p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead>タイトル</TableHead>
-                      <TableHead>アーティスト</TableHead>
-                      <TableHead className="text-right">再生時間</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tracks.map((track) => (
-                      <TableRow key={track.id}>
-                        <TableCell className="text-muted-foreground">
-                          {track.track_order}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8 rounded">
-                              {track.artwork_url && (
-                                <AvatarImage src={track.artwork_url} />
-                              )}
-                              <AvatarFallback className="rounded">
-                                <Music className="h-3 w-3" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{track.title}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{track.artist_name}</TableCell>
-                        <TableCell className="text-right">
-                          {track.duration_seconds
-                            ? formatDuration(track.duration_seconds)
-                            : "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-crate-border text-left">
+                        <th className="w-12 pb-3 text-xs font-medium text-crate-text-tertiary">#</th>
+                        <th className="pb-3 text-xs font-medium text-crate-text-tertiary">タイトル</th>
+                        <th className="pb-3 text-xs font-medium text-crate-text-tertiary">アーティスト</th>
+                        <th className="pb-3 text-right text-xs font-medium text-crate-text-tertiary">再生時間</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tracks.map((track) => (
+                        <tr key={track.id} className="border-b border-crate-border/50 last:border-0">
+                          <td className="py-3 text-sm text-crate-text-tertiary">
+                            {track.track_order}
+                          </td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8 rounded border border-crate-border bg-crate-elevated">
+                                {track.artwork_url && <AvatarImage src={track.artwork_url} />}
+                                <AvatarFallback className="rounded bg-crate-elevated">
+                                  <Music className="h-3 w-3 text-crate-text-tertiary" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium text-crate-text-primary">{track.title}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 text-sm text-crate-text-secondary">{track.artist_name}</td>
+                          <td className="py-3 text-right text-sm tabular-nums text-crate-text-secondary">
+                            {track.duration_seconds ? formatDuration(track.duration_seconds) : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
