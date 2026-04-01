@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const shows = [
   { id: 1, title: "Late Night Chill Mix", duration: "32:15", genre: "Lo-Fi" },
@@ -7,12 +8,13 @@ const shows = [
 ];
 
 export default function BroadcasterScreen() {
+  const { pop, push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Hero */}
       <div className="relative h-[200px] bg-crate-elevated overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-crate-accent/15 to-crate-void" />
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 cursor-pointer" onClick={() => pop()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -49,7 +51,7 @@ export default function BroadcasterScreen() {
           <span className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary">SHOWS</span>
           <div className="flex flex-col gap-[10px] mt-3">
             {shows.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px]">
+              <div key={s.id} className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer" onClick={() => push("program")}>
                 <div className="w-[52px] h-[52px] rounded-[8px] bg-crate-elevated flex items-center justify-center shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
                     <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

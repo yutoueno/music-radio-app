@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const notifications = [
   { id: 1, avatar: "K", color: "#7C83FF", text: "DJ Kenta", action: "published a new show", time: "2h ago", unread: true },
@@ -15,6 +16,7 @@ const filters = [
 ];
 
 export default function NotificationsScreen() {
+  const { push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
@@ -47,9 +49,10 @@ export default function NotificationsScreen() {
           {notifications.map((n, i) => (
             <div key={n.id}>
               <div
-                className={`flex items-start gap-3 py-3 px-2 rounded-lg ${
+                className={`flex items-start gap-3 py-3 px-2 rounded-lg cursor-pointer ${
                   n.unread ? "bg-crate-surface" : "bg-crate-void"
                 }`}
+                onClick={() => n.action.includes("show") || n.action.includes("liked") ? push("program") : push("broadcaster")}
               >
                 {/* Unread dot */}
                 <div className="w-[6px] flex items-center justify-center shrink-0 pt-3.5">
@@ -84,39 +87,6 @@ export default function NotificationsScreen() {
         </div>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex items-center justify-around py-2 bg-crate-surface border-t border-crate-border">
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Home</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Search</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5 relative">
-          <div className="relative">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <div className="absolute -top-0.5 -right-0.5 w-[7px] h-[7px] rounded-full bg-crate-accent" />
-          </div>
-          <span className="text-[10px] text-crate-accent">Notifications</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Profile</span>
-        </div>
-      </div>
     </div>
   );
 }

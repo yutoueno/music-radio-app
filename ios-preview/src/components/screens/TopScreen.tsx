@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const broadcasters = [
   { id: 1, name: "DJ Kenta", color: "#7C83FF" },
@@ -16,12 +17,13 @@ const programs = [
 ];
 
 export default function TopScreen() {
+  const { push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-[22px] font-bold tracking-[4px] uppercase">CRATE</span>
-        <div className="w-8 h-8 rounded-full bg-crate-elevated border border-crate-border" />
+        <div className="w-8 h-8 rounded-full bg-crate-elevated border border-crate-border cursor-pointer" onClick={() => push("profile")} />
       </div>
 
       {/* Content */}
@@ -33,7 +35,7 @@ export default function TopScreen() {
           </span>
           <div className="flex gap-4 mt-3 overflow-x-auto phone-scroll pb-2">
             {broadcasters.map((b) => (
-              <div key={b.id} className="flex flex-col items-center gap-1.5 shrink-0">
+              <div key={b.id} className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer" onClick={() => push("broadcaster")}>
                 <div
                   className="w-[44px] h-[44px] rounded-full border-2 border-crate-accent/30"
                   style={{ background: `${b.color}33` }}
@@ -53,7 +55,8 @@ export default function TopScreen() {
             {programs.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px]"
+                className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer"
+                onClick={() => push("program")}
               >
                 <div className="w-[52px] h-[52px] rounded-[8px] bg-crate-elevated flex items-center justify-center shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
@@ -81,52 +84,6 @@ export default function TopScreen() {
         </div>
       </div>
 
-      {/* Mini Player */}
-      <div className="border-t border-crate-border bg-crate-surface">
-        <div className="h-[2px] bg-crate-border">
-          <div className="h-full w-[65%] bg-crate-accent" />
-        </div>
-        <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-[36px] h-[36px] rounded bg-crate-elevated shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium truncate">Late Night Chill Mix</p>
-            <p className="text-[11px] text-crate-text-secondary">DJ Kenta</p>
-          </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-secondary shrink-0">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <button className="w-[28px] h-[28px] rounded-full bg-crate-accent flex items-center justify-center shrink-0">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Tab Bar */}
-      <div className="flex items-center justify-around py-2 bg-crate-surface border-t border-crate-border">
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.15"/>
-          </svg>
-          <span className="text-[10px] text-crate-accent">Home</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Search</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Profile</span>
-        </div>
-      </div>
     </div>
   );
 }

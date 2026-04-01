@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const programs = [
   { id: 1, title: "Late Night Chill Mix", broadcaster: "DJ Kenta", duration: "32:15", genre: "Lo-Fi" },
@@ -8,11 +9,12 @@ const programs = [
 ];
 
 export default function FavoritesScreen() {
+  const { pop, push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
       <div className="flex items-center justify-between px-4 py-3 relative">
-        <button className="w-8 h-8 flex items-center justify-center">
+        <button className="w-8 h-8 flex items-center justify-center" onClick={() => pop()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary">
             <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -35,7 +37,8 @@ export default function FavoritesScreen() {
           {programs.map((p, i) => (
             <div
               key={p.id}
-              className="relative flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] overflow-hidden"
+              className="relative flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] overflow-hidden cursor-pointer"
+              onClick={() => push("program")}
             >
               {/* Swipe hint on first card */}
               {i === 0 && (
@@ -66,28 +69,6 @@ export default function FavoritesScreen() {
         </div>
       </div>
 
-      {/* Mini Player */}
-      <div className="border-t border-crate-border bg-crate-surface">
-        <div className="h-[2px] bg-crate-border">
-          <div className="h-full w-[65%] bg-crate-accent" />
-        </div>
-        <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-[36px] h-[36px] rounded bg-crate-elevated shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium truncate">Late Night Chill Mix</p>
-            <p className="text-[11px] text-crate-text-secondary">DJ Kenta</p>
-          </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-secondary shrink-0">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <button className="w-[28px] h-[28px] rounded-full bg-crate-accent flex items-center justify-center shrink-0">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

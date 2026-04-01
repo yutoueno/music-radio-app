@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const genres = [
   { label: "Lo-Fi", active: true },
@@ -16,11 +17,12 @@ const steps = [
 ];
 
 export default function ProgramEditScreen() {
+  const { pop, push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
       <div className="flex items-center justify-between px-4 py-3">
-        <span className="text-[14px] text-crate-text-secondary">Cancel</span>
+        <span className="text-[14px] text-crate-text-secondary cursor-pointer" onClick={() => pop()}>Cancel</span>
         <span className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary">
           NEW SHOW
         </span>
@@ -132,7 +134,7 @@ export default function ProgramEditScreen() {
 
       {/* Next Button */}
       <div className="px-4 pb-6 pt-3">
-        <button className="w-full py-3.5 bg-crate-accent rounded-[10px] text-[15px] font-semibold text-white flex items-center justify-center gap-2">
+        <button className="w-full py-3.5 bg-crate-accent rounded-[10px] text-[15px] font-semibold text-white flex items-center justify-center gap-2" onClick={() => push("trackTiming")}>
           Next: Add Tracks
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
             <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

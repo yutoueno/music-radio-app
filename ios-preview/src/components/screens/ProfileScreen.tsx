@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const stats = [
   { label: "Shows", value: "12" },
@@ -14,6 +15,12 @@ const menuItems = [
 ];
 
 export default function ProfileScreen() {
+  const { push } = useNavigation();
+  const menuClickMap: Record<string, () => void> = {
+    "My Shows": () => push("broadcast"),
+    "Favorites": () => push("favorites"),
+    "Following": () => push("followList"),
+  };
   return (
     <div className="flex flex-col h-full bg-crate-void">
       <div className="flex items-center justify-center px-4 py-3">
@@ -49,7 +56,7 @@ export default function ProfileScreen() {
         {/* Menu */}
         <div className="mt-6 bg-crate-surface border border-crate-border rounded-[10px] overflow-hidden">
           {menuItems.map((item, i) => (
-            <div key={item.label} className={`flex items-center gap-3 px-4 py-3.5 ${i < menuItems.length - 1 ? 'border-b border-crate-border' : ''}`}>
+            <div key={item.label} className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer ${i < menuItems.length - 1 ? 'border-b border-crate-border' : ''}`} onClick={menuClickMap[item.label]}>
               <div className="w-[28px] h-[28px] rounded-[6px] bg-crate-accent/10 flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
                   {item.icon === "radio" && <><circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-8.49a6 6 0 0 0 0 8.49" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></>}
@@ -80,29 +87,6 @@ export default function ProfileScreen() {
         </div>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex items-center justify-around py-2 bg-crate-surface border-t border-crate-border">
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Home</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Search</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="currentColor" fillOpacity="0.15"/>
-            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-accent">Profile</span>
-        </div>
-      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const stats = [
   { label: "Total Plays", value: "12,847", change: "+23%", changeColor: "text-crate-success" },
@@ -32,6 +33,7 @@ const shows = [
 ];
 
 export default function BroadcastHubScreen() {
+  const { push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Header */}
@@ -52,7 +54,8 @@ export default function BroadcastHubScreen() {
           {stats.map((s) => (
             <div
               key={s.label}
-              className="p-3 bg-crate-surface border border-crate-border rounded-[10px]"
+              className="p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer"
+              onClick={() => push("analytics")}
             >
               <p className="text-[11px] text-crate-text-muted">{s.label}</p>
               <p className={`text-[20px] font-bold mt-1 ${s.mono ? "font-mono" : ""}`}>
@@ -72,7 +75,7 @@ export default function BroadcastHubScreen() {
         </div>
 
         {/* Create Button */}
-        <button className="w-full mt-5 py-3.5 bg-crate-accent rounded-[10px] text-[15px] font-semibold text-white flex items-center justify-center gap-2">
+        <button className="w-full mt-5 py-3.5 bg-crate-accent rounded-[10px] text-[15px] font-semibold text-white flex items-center justify-center gap-2" onClick={() => push("audioUpload")}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white">
             <path d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
           </svg>
@@ -88,7 +91,8 @@ export default function BroadcastHubScreen() {
             {shows.map((s) => (
               <div
                 key={s.id}
-                className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px]"
+                className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer"
+                onClick={() => push("programEdit")}
               >
                 {/* Thumbnail */}
                 <div className="w-[48px] h-[48px] rounded-[8px] bg-crate-elevated flex items-center justify-center shrink-0">
@@ -118,37 +122,6 @@ export default function BroadcastHubScreen() {
         </div>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex items-center justify-around py-2 bg-crate-surface border-t border-crate-border">
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" />
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Home</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Search</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.15" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <path d="M12 19v4m-4 0h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="text-[10px] text-crate-accent">Broadcast</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Profile</span>
-        </div>
-      </div>
     </div>
   );
 }

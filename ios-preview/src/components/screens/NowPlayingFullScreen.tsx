@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 // Fixed waveform data for the progress bar (80 bars)
 const waveformData = [
@@ -11,6 +12,7 @@ const waveformData = [
 const progressPosition = 42; // 42% through
 
 export default function NowPlayingFullScreen() {
+  const { pop } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void relative overflow-hidden">
       {/* Background gradient (simulated artwork color bleed) */}
@@ -20,7 +22,7 @@ export default function NowPlayingFullScreen() {
       {/* Drag Handle + AirPlay */}
       <div className="relative z-10 flex items-center justify-between px-4 pt-3 pb-1">
         <div className="w-8" />
-        <div className="w-[36px] h-[5px] bg-crate-text-muted/60 rounded-full" />
+        <div className="w-[36px] h-[5px] bg-crate-text-muted/60 rounded-full cursor-pointer" onClick={() => pop()} />
         {/* AirPlay icon */}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-secondary">
           <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const genres = ["All", "Lo-Fi", "Jazz", "Pop", "Electronic", "Hip-Hop", "R&B"];
 
@@ -9,6 +10,7 @@ const results = [
 ];
 
 export default function SearchScreen() {
+  const { push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       <div className="px-4 pt-3 pb-2">
@@ -59,7 +61,7 @@ export default function SearchScreen() {
         {/* Results */}
         <div className="flex flex-col gap-[10px] mt-3 pb-20">
           {results.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px]">
+            <div key={p.id} className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer" onClick={() => push("program")}>
               <div className="w-[52px] h-[52px] rounded-[8px] bg-crate-elevated flex items-center justify-center shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
                   <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -83,29 +85,6 @@ export default function SearchScreen() {
         </div>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex items-center justify-around py-2 bg-crate-surface border-t border-crate-border">
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Home</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="text-[10px] text-crate-accent">Search</span>
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-          </svg>
-          <span className="text-[10px] text-crate-text-tertiary">Profile</span>
-        </div>
-      </div>
     </div>
   );
 }

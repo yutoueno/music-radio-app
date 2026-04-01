@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const weekBars = [
   { day: "M", height: 35 },
@@ -24,11 +25,12 @@ const demographics = [
 ];
 
 export default function AnalyticsScreen() {
+  const { pop } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
       <div className="flex items-center justify-center px-4 py-3 relative">
-        <button className="absolute left-4 w-8 h-8 flex items-center justify-center">
+        <button className="absolute left-4 w-8 h-8 flex items-center justify-center" onClick={() => pop()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary">
             <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>

@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 // Fixed waveform data (100 bars) - seeded, not random
 const waveformHeights = [
@@ -23,11 +24,12 @@ const tracks = [
 const eqBars = [12, 8, 14, 6, 10];
 
 export default function ProgramScreen() {
+  const { push, pop } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
       <div className="flex items-center justify-between px-4 py-3">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary cursor-pointer" onClick={() => pop()}>
           <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
         <span className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary">
@@ -55,7 +57,7 @@ export default function ProgramScreen() {
         {/* Info */}
         <div className="text-center mt-5 px-4">
           <h1 className="text-[22px] font-bold tracking-[-0.5px]">Late Night Chill Mix</h1>
-          <p className="text-[15px] text-crate-text-secondary mt-1">DJ Kenta</p>
+          <p className="text-[15px] text-crate-text-secondary mt-1 cursor-pointer" onClick={() => push("broadcaster")}>DJ Kenta</p>
           <span className="inline-block text-[11px] text-crate-accent bg-crate-accent/10 px-2 py-0.5 rounded mt-2">
             Lo-Fi
           </span>

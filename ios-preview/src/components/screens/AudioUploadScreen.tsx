@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const waveformBars = [
   14, 8, 18, 12, 6, 16, 10, 20, 7, 15, 11, 19, 5, 13, 17, 9, 20, 6, 14, 11,
@@ -6,11 +7,12 @@ const waveformBars = [
 ];
 
 export default function AudioUploadScreen() {
+  const { pop, push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
       <div className="flex items-center justify-between px-4 py-3">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary cursor-pointer" onClick={() => pop()}>
           <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <span className="text-[11px] font-medium tracking-[2px] uppercase text-crate-text-tertiary">
@@ -92,7 +94,7 @@ export default function AudioUploadScreen() {
 
       {/* Continue Button */}
       <div className="px-4 pb-6 pt-3">
-        <button className="w-full py-3.5 bg-crate-accent rounded-[10px] text-[15px] font-semibold text-white">
+        <button className="w-full py-3.5 bg-crate-accent rounded-[10px] text-[15px] font-semibold text-white" onClick={() => push("programEdit")}>
           Continue
         </button>
       </div>

@@ -1,4 +1,5 @@
 "use client";
+import { useNavigation } from "../AppNavigator";
 
 const creators = [
   { id: 1, name: "DJ Kenta", followers: "1.2K", color: "#7C83FF", initial: "K" },
@@ -9,11 +10,12 @@ const creators = [
 ];
 
 export default function FollowListScreen() {
+  const { pop, push } = useNavigation();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
       <div className="flex items-center justify-between px-4 py-3 relative">
-        <button className="w-8 h-8 flex items-center justify-center">
+        <button className="w-8 h-8 flex items-center justify-center" onClick={() => pop()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-primary">
             <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -35,7 +37,7 @@ export default function FollowListScreen() {
         <div className="flex flex-col">
           {creators.map((c, i) => (
             <div key={c.id}>
-              <div className="flex items-center gap-3 py-3">
+              <div className="flex items-center gap-3 py-3 cursor-pointer" onClick={() => push("broadcaster")}>
                 <div
                   className="w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0 text-[16px] font-bold"
                   style={{ background: `${c.color}25`, color: c.color }}
