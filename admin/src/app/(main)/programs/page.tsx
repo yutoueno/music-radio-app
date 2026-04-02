@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, MoreHorizontal, EyeOff } from "lucide-react";
+import { Search, MoreHorizontal, EyeOff, Play, Pause } from "lucide-react";
+import { ExportButton } from "@/components/ExportButton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -28,6 +29,81 @@ const statusMap: Record<string, { label: string; colorClass: string }> = {
   archived: { label: "アーカイブ", colorClass: "bg-yellow-500/15 text-yellow-400" },
   draft: { label: "下書き", colorClass: "bg-crate-elevated text-crate-text-tertiary" },
 };
+
+function MiniWaveform({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <div className="flex items-end gap-[2px] h-4">
+      {[0.4, 0.7, 0.5, 1, 0.6, 0.8, 0.3, 0.9, 0.5, 0.7, 0.4, 0.6].map((h, i) => (
+        <div
+          key={i}
+          className={`w-[2px] rounded-full transition-all duration-300 ${
+            isPlaying ? "bg-crate-accent" : "bg-crate-text-tertiary"
+          }`}
+          style={{
+            height: `${h * 100}%`,
+            animation: isPlaying ? `waveform 0.8s ease-in-out ${i * 0.06}s infinite alternate` : "none",
+          }}
+        />
+      ))}
+      <style jsx>{`
+        @keyframes waveform {
+          0% { transform: scaleY(0.3); }
+          100% { transform: scaleY(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function AudioPreviewButton({ audioUrl }: { audioUrl: string | null }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!audioUrl) return;
+
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(audioUrl);
+        audioRef.current.addEventListener("ended", () => setIsPlaying(false));
+      }
+      audioRef.current.play().catch(() => setIsPlaying(false));
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <button
+      onClick={togglePlay}
+      disabled={!audioUrl}
+      className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-crate-elevated disabled:opacity-30 disabled:cursor-not-allowed"
+    >
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-crate-accent/15">
+        {isPlaying ? (
+          <Pause className="h-3 w-3 text-crate-accent" />
+        ) : (
+          <Play className="h-3 w-3 text-crate-accent ml-0.5" />
+        )}
+      </div>
+      <MiniWaveform isPlaying={isPlaying} />
+    </button>
+  );
+}
 
 const sortOptions = [
   { value: "created_at:desc", label: "新着順" },
@@ -111,6 +187,14 @@ export default function ProgramsPage() {
       ),
     },
     {
+      key: "audio_preview",
+      header: "Preview",
+      className: "w-28",
+      render: (program) => (
+        <AudioPreviewButton audioUrl={program.audio_url} />
+      ),
+    },
+    {
       key: "status",
       header: "ステータス",
       render: (program) => {
@@ -191,9 +275,23 @@ export default function ProgramsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-crate-text-primary">番組管理</h1>
-        <p className="text-sm text-crate-text-secondary">登録番組の一覧と管理</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-crate-text-primary">番組管理</h1>
+          <p className="text-sm text-crate-text-secondary">登録番組の一覧と管理</p>
+        </div>
+        <ExportButton
+          data={programs.map((p) => ({
+            Title: p.title,
+            Status: p.status,
+            Genre: p.genre || "-",
+            Play_Count: p.play_count,
+            Favorite_Count: p.favorite_count,
+            Duration: p.duration_seconds ? formatDuration(p.duration_seconds) : "-",
+            Created: formatDate(p.created_at),
+          }))}
+          filename="programs"
+        />
       </div>
 
       {/* Filters */}

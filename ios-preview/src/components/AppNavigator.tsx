@@ -1,24 +1,28 @@
 "use client";
-import { useState, useCallback, createContext, useContext, ReactNode } from "react";
+import { useState, useCallback, createContext, useContext, ReactNode, useRef } from "react";
 
-type Screen =
-  | "home" | "search" | "broadcast" | "profile"  // tab screens
-  | "program" | "broadcaster" | "nowPlayingFull"  // push screens
+export type Screen =
+  | "home" | "search" | "broadcast" | "profile"
+  | "program" | "broadcaster" | "nowPlayingFull"
   | "favorites" | "followList" | "notifications" | "analytics"
   | "audioUpload" | "programEdit" | "trackTiming"
-  | "signIn";
+  | "signIn"
+  | "settings" | "profileEdit" | "onboarding" | "appleMusicSearch" | "contact" | "sharePreview";
 
 type Tab = "home" | "search" | "broadcast" | "profile";
 
 interface NavContext {
   currentScreen: Screen;
+  previousScreen: Screen | null;
   currentTab: Tab;
+  transitionDirection: "push" | "pop" | "tab" | null;
   push: (screen: Screen) => void;
   pop: () => void;
   switchTab: (tab: Tab) => void;
   isPlaying: boolean;
   setIsPlaying: (v: boolean) => void;
   showMiniPlayer: boolean;
+  screenStack: Screen[];
 }
 
 const NavigationContext = createContext<NavContext | null>(null);
@@ -33,18 +37,28 @@ export default function AppNavigator({ children }: { children: ReactNode }) {
   const [currentTab, setCurrentTab] = useState<Tab>("home");
   const [stack, setStack] = useState<Screen[]>(["home"]);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [transitionDirection, setTransitionDirection] = useState<"push" | "pop" | "tab" | null>(null);
+  const [previousScreen, setPreviousScreen] = useState<Screen | null>(null);
 
   const currentScreen = stack[stack.length - 1];
 
   const push = useCallback((screen: Screen) => {
+    setPreviousScreen(stack[stack.length - 1]);
+    setTransitionDirection("push");
     setStack(prev => [...prev, screen]);
-  }, []);
+  }, [stack]);
 
   const pop = useCallback(() => {
-    setStack(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
-  }, []);
+    if (stack.length > 1) {
+      setPreviousScreen(stack[stack.length - 1]);
+      setTransitionDirection("pop");
+      setStack(prev => prev.slice(0, -1));
+    }
+  }, [stack]);
 
   const switchTab = useCallback((tab: Tab) => {
+    setPreviousScreen(stack[stack.length - 1]);
+    setTransitionDirection("tab");
     setCurrentTab(tab);
     const screenMap: Record<Tab, Screen> = {
       home: "home",
@@ -53,13 +67,17 @@ export default function AppNavigator({ children }: { children: ReactNode }) {
       profile: "profile",
     };
     setStack([screenMap[tab]]);
-  }, []);
+  }, [stack]);
 
-  const noMiniPlayerScreens: Screen[] = ["signIn", "nowPlayingFull", "audioUpload", "programEdit", "trackTiming"];
+  const noMiniPlayerScreens: Screen[] = ["signIn", "nowPlayingFull", "audioUpload", "programEdit", "trackTiming", "onboarding"];
   const showMiniPlayer = isPlaying && !noMiniPlayerScreens.includes(currentScreen);
 
   return (
-    <NavigationContext.Provider value={{ currentScreen, currentTab, push, pop, switchTab, isPlaying, setIsPlaying, showMiniPlayer }}>
+    <NavigationContext.Provider value={{
+      currentScreen, previousScreen, currentTab, transitionDirection,
+      push, pop, switchTab, isPlaying, setIsPlaying, showMiniPlayer,
+      screenStack: stack,
+    }}>
       {children}
     </NavigationContext.Provider>
   );

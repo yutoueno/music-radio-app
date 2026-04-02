@@ -1,16 +1,13 @@
 "use client";
 import { useNavigation } from "../AppNavigator";
+import { useStore } from "../../lib/store";
 
 const genres = ["All", "Lo-Fi", "Jazz", "Pop", "Electronic", "Hip-Hop", "R&B"];
 
-const results = [
-  { id: 1, title: "Midnight Sessions", broadcaster: "Yuki", duration: "38:20", genre: "Jazz" },
-  { id: 2, title: "Tokyo Drift Beats", broadcaster: "Ryo", duration: "42:10", genre: "Electronic" },
-  { id: 3, title: "Chill Hop Sunday", broadcaster: "DJ Kenta", duration: "55:00", genre: "Lo-Fi" },
-];
-
 export default function SearchScreen() {
   const { push } = useNavigation();
+  const { searchQuery, setSearchQuery, selectedGenre, setSelectedGenre, getFilteredPrograms, setCurrentProgram } = useStore();
+  const results = getFilteredPrograms();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       <div className="px-4 pt-3 pb-2">
@@ -24,17 +21,31 @@ export default function SearchScreen() {
             <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
             <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          <span className="text-[15px] text-crate-text-tertiary">Search shows, creators...</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search shows, creators..."
+            className="flex-1 text-[15px] text-crate-text-primary placeholder:text-crate-text-tertiary bg-transparent outline-none"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="text-crate-text-muted">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Genres */}
         <div className="flex gap-2 mt-4 overflow-x-auto phone-scroll pb-1">
-          {genres.map((g, i) => (
+          {genres.map((g) => (
             <button
               key={g}
-              className={`px-3 py-1.5 rounded-full text-[13px] shrink-0 ${
-                i === 0 ? 'bg-crate-accent text-white' : 'border border-crate-border text-crate-text-secondary'
+              className={`px-3 py-1.5 rounded-full text-[13px] shrink-0 transition-colors ${
+                selectedGenre === g ? 'bg-crate-accent text-white' : 'border border-crate-border text-crate-text-secondary'
               }`}
+              onClick={() => setSelectedGenre(g)}
             >
               {g}
             </button>
@@ -55,13 +66,13 @@ export default function SearchScreen() {
               </button>
             ))}
           </div>
-          <span className="text-[11px] font-mono text-crate-text-muted">156 shows</span>
+          <span className="text-[11px] font-mono text-crate-text-muted">{results.length} shows</span>
         </div>
 
         {/* Results */}
         <div className="flex flex-col gap-[10px] mt-3 pb-20">
           {results.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer" onClick={() => push("program")}>
+            <div key={p.id} className="flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] cursor-pointer" onClick={() => { setCurrentProgram(p.id); push("program"); }}>
               <div className="w-[52px] h-[52px] rounded-[8px] bg-crate-elevated flex items-center justify-center shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-crate-text-tertiary">
                   <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

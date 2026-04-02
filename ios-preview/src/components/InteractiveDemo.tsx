@@ -1,6 +1,7 @@
 "use client";
 import IPhoneFrame from "./IPhoneFrame";
 import AppNavigator, { useNavigation } from "./AppNavigator";
+import { StoreProvider } from "../lib/store";
 import ScreenRouter from "./ScreenRouter";
 
 function ScreenMap() {
@@ -21,6 +22,7 @@ function ScreenMap() {
     { title: "BROADCASTER", items: [
       { id: "audioUpload", label: "Audio Upload", action: () => push("audioUpload") },
       { id: "programEdit", label: "Program Edit", action: () => push("programEdit") },
+      { id: "appleMusicSearch", label: "Apple Music Search", action: () => push("appleMusicSearch") },
       { id: "analytics", label: "Analytics", action: () => push("analytics") },
     ]},
     { title: "SOCIAL", items: [
@@ -28,9 +30,16 @@ function ScreenMap() {
       { id: "favorites", label: "Favorites", action: () => push("favorites") },
       { id: "followList", label: "Following", action: () => push("followList") },
       { id: "notifications", label: "Notifications", action: () => push("notifications") },
+      { id: "sharePreview", label: "Share Preview", action: () => push("sharePreview") },
+    ]},
+    { title: "SETTINGS", items: [
+      { id: "settings", label: "Settings", action: () => push("settings") },
+      { id: "profileEdit", label: "Edit Profile", action: () => push("profileEdit") },
+      { id: "contact", label: "Contact", action: () => push("contact") },
     ]},
     { title: "AUTH", items: [
       { id: "signIn", label: "Sign In", action: () => push("signIn") },
+      { id: "onboarding", label: "Onboarding", action: () => push("onboarding") },
     ]},
   ];
 
@@ -64,6 +73,7 @@ function ScreenMap() {
 
 export default function InteractiveDemo() {
   return (
+    <StoreProvider>
     <AppNavigator>
       <div className="min-h-screen bg-crate-void flex">
         {/* Sidebar */}
@@ -73,7 +83,7 @@ export default function InteractiveDemo() {
             <p className="text-[11px] text-crate-text-tertiary mt-1">Interactive Prototype</p>
             <div className="flex items-center gap-2 mt-2">
               <div className="w-1.5 h-1.5 rounded-full bg-crate-success animate-pulse" />
-              <span className="text-[10px] font-mono text-crate-text-muted">15 screens</span>
+              <span className="text-[10px] font-mono text-crate-text-muted">21 screens</span>
             </div>
           </div>
           <ScreenMap />
@@ -92,5 +102,6 @@ export default function InteractiveDemo() {
         </main>
       </div>
     </AppNavigator>
+    </StoreProvider>
   );
 }

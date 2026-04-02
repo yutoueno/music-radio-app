@@ -1,16 +1,11 @@
 "use client";
 import { useNavigation } from "../AppNavigator";
-
-const creators = [
-  { id: 1, name: "DJ Kenta", followers: "1.2K", color: "#7C83FF", initial: "K" },
-  { id: 2, name: "Yuki", followers: "890", color: "#FF6B8A", initial: "Y" },
-  { id: 3, name: "Taro", followers: "2.1K", color: "#4DFF88", initial: "T" },
-  { id: 4, name: "Mika", followers: "654", color: "#FFB84D", initial: "M" },
-  { id: 5, name: "Ryo", followers: "1.5K", color: "#83D9FF", initial: "R" },
-];
+import { useStore } from "../../lib/store";
 
 export default function FollowListScreen() {
   const { pop, push } = useNavigation();
+  const { getFollowedBroadcasters, isFollowing, toggleFollow } = useStore();
+  const creators = getFollowedBroadcasters();
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
@@ -30,7 +25,7 @@ export default function FollowListScreen() {
       <div className="flex-1 overflow-y-auto phone-scroll px-4">
         {/* Count */}
         <div className="flex justify-end mb-3">
-          <span className="text-[12px] font-mono text-crate-text-muted">48 creators</span>
+          <span className="text-[12px] font-mono text-crate-text-muted">{creators.length} creators</span>
         </div>
 
         {/* Creator Rows */}
@@ -42,14 +37,21 @@ export default function FollowListScreen() {
                   className="w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0 text-[16px] font-bold"
                   style={{ background: `${c.color}25`, color: c.color }}
                 >
-                  {c.initial}
+                  {c.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-medium text-crate-text-primary">{c.name}</p>
-                  <p className="text-[13px] text-crate-text-secondary">{c.followers} followers</p>
+                  <p className="text-[13px] text-crate-text-secondary">{c.followerCount >= 1000 ? `${(c.followerCount / 1000).toFixed(1)}K` : c.followerCount} followers</p>
                 </div>
-                <button className="px-4 py-1.5 rounded-full border border-crate-text-tertiary shrink-0">
-                  <span className="text-[12px] text-crate-text-tertiary">Following</span>
+                <button
+                  className={`px-4 py-1.5 rounded-full shrink-0 transition-colors ${
+                    isFollowing(c.id)
+                      ? 'bg-crate-accent text-white'
+                      : 'border border-crate-text-tertiary text-crate-text-tertiary'
+                  }`}
+                  onClick={(e) => { e.stopPropagation(); toggleFollow(c.id); }}
+                >
+                  <span className="text-[12px]">{isFollowing(c.id) ? "Following" : "Follow"}</span>
                 </button>
               </div>
               {i < creators.length - 1 && (

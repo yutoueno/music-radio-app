@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, MoreHorizontal, UserX, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ExportButton } from "@/components/ExportButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -21,8 +22,28 @@ import {
   useSuspendUser,
   useActivateUser,
 } from "@/hooks/use-api";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import type { User } from "@/types";
+
+type UserRole = "admin" | "broadcaster" | "listener";
+
+function getUserRole(user: User): UserRole {
+  if (user.is_admin) return "admin";
+  // Heuristic: if user has a profile with a follower_count > 0, they are likely a broadcaster
+  if (user.profile && user.profile.follower_count > 0) return "broadcaster";
+  return "listener";
+}
+
+const roleConfig: Record<UserRole, { label: string; colorClass: string }> = {
+  admin: { label: "Admin", colorClass: "bg-crate-accent/15 text-crate-accent" },
+  broadcaster: { label: "Broadcaster", colorClass: "bg-yellow-500/15 text-yellow-400" },
+  listener: { label: "Listener", colorClass: "bg-crate-elevated text-crate-text-secondary" },
+};
+
+function getLastActive(user: User): string {
+  // Use updated_at as a proxy for last active
+  return user.updated_at;
+}
 
 function getUserDisplayName(user: User): string {
   return user.profile?.nickname || user.email;
@@ -35,6 +56,7 @@ function getUserAvatarUrl(user: User): string | null {
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
   const [page, setPage] = useState(1);
 
   const { toast } = useToast();
@@ -63,6 +85,10 @@ export default function UsersPage() {
     users = users.filter((u) => u.is_active);
   } else if (statusFilter === "suspended") {
     users = users.filter((u) => !u.is_active);
+  }
+
+  if (roleFilter) {
+    users = users.filter((u) => getUserRole(u) === roleFilter);
   }
 
   const handleSuspend = async (user: User) => {
@@ -122,19 +148,19 @@ export default function UsersPage() {
       ),
     },
     {
-      key: "is_admin",
-      header: "ロール",
-      render: (user) => (
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            user.is_admin
-              ? "bg-crate-accent/15 text-crate-accent"
-              : "bg-crate-elevated text-crate-text-secondary"
-          }`}
-        >
-          {user.is_admin ? "管理者" : "ユーザー"}
-        </span>
-      ),
+      key: "role",
+      header: "Role",
+      render: (user) => {
+        const role = getUserRole(user);
+        const config = roleConfig[role];
+        return (
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.colorClass}`}
+          >
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       key: "is_active",
@@ -176,6 +202,15 @@ export default function UsersPage() {
       ),
     },
     {
+      key: "last_active",
+      header: "Last Active",
+      render: (user) => (
+        <span className="text-sm text-crate-text-secondary">
+          {formatDateTime(getLastActive(user))}
+        </span>
+      ),
+    },
+    {
       key: "actions",
       header: "",
       className: "w-10",
@@ -210,11 +245,25 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-crate-text-primary">ユーザー管理</h1>
-        <p className="text-sm text-crate-text-secondary">
-          登録ユーザーの一覧と管理
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-crate-text-primary">ユーザー管理</h1>
+          <p className="text-sm text-crate-text-secondary">
+            登録ユーザーの一覧と管理
+          </p>
+        </div>
+        <ExportButton
+          data={users.map((u) => ({
+            Name: getUserDisplayName(u),
+            Email: u.email,
+            Role: roleConfig[getUserRole(u)].label,
+            Status: u.is_active ? "Active" : "Suspended",
+            Email_Verified: u.email_verified ? "Yes" : "No",
+            Registered: formatDate(u.created_at),
+            Last_Active: formatDateTime(getLastActive(u)),
+          }))}
+          filename="users"
+        />
       </div>
 
       {/* Filters */}
@@ -236,6 +285,16 @@ export default function UsersPage() {
           <option value="all">すべて</option>
           <option value="active">有効</option>
           <option value="suspended">停止中</option>
+        </select>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value === "all" ? "" : e.target.value)}
+          className="rounded-lg border border-crate-border bg-crate-elevated px-3 py-2 text-sm text-crate-text-primary outline-none focus:border-crate-accent"
+        >
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="broadcaster">Broadcaster</option>
+          <option value="listener">Listener</option>
         </select>
       </div>
 

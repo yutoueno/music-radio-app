@@ -1,5 +1,7 @@
 "use client";
+import { useState } from "react";
 import { useNavigation } from "../AppNavigator";
+import { useStore } from "../../lib/store";
 
 // Fixed waveform data (100 bars) - seeded, not random
 const waveformHeights = [
@@ -10,7 +12,7 @@ const waveformHeights = [
   34, 12, 30, 24, 39, 17, 28, 33, 15, 22, 36, 20, 31, 25, 14, 38, 27, 19, 35, 23,
 ];
 
-const playheadPosition = 38; // 38% through
+// playheadPosition now comes from store
 
 const tracks = [
   { id: 1, title: "Sunset Drive", artist: "Nujabes", timing: "00:00", duration: "4:30", active: false, appleMusicId: "1234" },
@@ -24,7 +26,11 @@ const tracks = [
 const eqBars = [12, 8, 14, 6, 10];
 
 export default function ProgramScreen() {
-  const { push, pop } = useNavigation();
+  const { push, pop, isPlaying } = useNavigation();
+  const { getCurrentProgram, getProgram, toggleFavorite, isFavorite, playbackProgress } = useStore();
+  const program = getCurrentProgram() || getProgram("1");
+  const [heartAnimating, setHeartAnimating] = useState(false);
+  const fav = program ? isFavorite(program.id) : false;
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
@@ -56,25 +62,30 @@ export default function ProgramScreen() {
 
         {/* Info */}
         <div className="text-center mt-5 px-4">
-          <h1 className="text-[22px] font-bold tracking-[-0.5px]">Late Night Chill Mix</h1>
-          <p className="text-[15px] text-crate-text-secondary mt-1 cursor-pointer" onClick={() => push("broadcaster")}>DJ Kenta</p>
+          <h1 className="text-[22px] font-bold tracking-[-0.5px]">{program?.title || "Late Night Chill Mix"}</h1>
+          <p className="text-[15px] text-crate-text-secondary mt-1 cursor-pointer" onClick={() => push("broadcaster")}>{program?.broadcaster || "DJ Kenta"}</p>
           <span className="inline-block text-[11px] text-crate-accent bg-crate-accent/10 px-2 py-0.5 rounded mt-2">
-            Lo-Fi
+            {program?.genre || "Lo-Fi"}
           </span>
+          <div className="flex items-center justify-center gap-4 mt-2">
+            <span className="text-[11px] text-crate-text-muted">{program?.playCount?.toLocaleString() || "0"} plays</span>
+            <span className="text-[11px] text-crate-text-muted">{program?.favoriteCount || "0"} favorites</span>
+          </div>
         </div>
 
         {/* Waveform */}
         <div className="px-5 mt-6">
           <div className="relative flex items-end justify-center gap-[1.5px] h-[44px]">
             {waveformHeights.map((h, i) => {
-              const isPlayed = i < playheadPosition;
-              const isPlayhead = i === playheadPosition;
+              const playheadPos = Math.floor((playbackProgress / 100) * waveformHeights.length);
+              const isPlayed = i < playheadPos;
+              const isPlayhead = i === playheadPos;
               return (
                 <div key={i} className="relative flex items-end" style={{ height: '44px' }}>
                   <div
                     className={`w-[2px] rounded-full transition-colors ${
                       isPlayed ? 'bg-crate-accent' : 'bg-crate-border'
-                    } ${isPlayhead ? 'bg-crate-accent' : ''}`}
+                    } ${isPlayhead ? 'bg-crate-accent' : ''} ${isPlayed && isPlaying ? 'waveform-bar-animated' : ''}`}
                     style={{ height: `${h}px` }}
                   />
                   {isPlayhead && (
@@ -225,9 +236,20 @@ export default function ProgramScreen() {
 
       {/* Action bar */}
       <div className="flex items-center justify-around py-3 px-4 border-t border-crate-border bg-crate-surface">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
-        </svg>
+        <button
+          className={`transition-transform ${heartAnimating ? 'animate-heart-beat' : ''}`}
+          onClick={() => {
+            if (program) {
+              setHeartAnimating(true);
+              toggleFavorite(program.id);
+              setTimeout(() => setHeartAnimating(false), 300);
+            }
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={fav ? "text-crate-accent" : "text-crate-text-secondary"}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill={fav ? "currentColor" : "none"} stroke={fav ? "none" : "currentColor"} strokeWidth="2"/>
+          </svg>
+        </button>
         <button className="px-4 py-1.5 border border-crate-text-tertiary rounded-full text-[13px] text-crate-text-secondary">
           Follow
         </button>

@@ -1,5 +1,7 @@
 "use client";
+import { useState } from "react";
 import { useNavigation } from "../AppNavigator";
+import { useStore } from "../../lib/store";
 
 // Fixed waveform data for the progress bar (80 bars)
 const waveformData = [
@@ -9,10 +11,14 @@ const waveformData = [
   14, 30, 25, 38, 19, 33, 17, 34, 29, 22, 27, 16, 40, 24, 31, 20, 35, 18, 37, 26,
 ];
 
-const progressPosition = 42; // 42% through
+// progressPosition now comes from store
 
 export default function NowPlayingFullScreen() {
-  const { pop } = useNavigation();
+  const { pop, isPlaying, setIsPlaying } = useNavigation();
+  const { getCurrentProgram, toggleFavorite, isFavorite, playbackProgress } = useStore();
+  const program = getCurrentProgram();
+  const [heartAnimating, setHeartAnimating] = useState(false);
+  const fav = program ? isFavorite(program.id) : false;
   return (
     <div className="flex flex-col h-full bg-crate-void relative overflow-hidden">
       {/* Background gradient (simulated artwork color bleed) */}
@@ -47,21 +53,37 @@ export default function NowPlayingFullScreen() {
         <div className="w-full mt-8 flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-[20px] font-bold tracking-[-0.3px] text-crate-text-primary truncate">
-              Late Night Chill Mix
+              {program?.title || "Late Night Chill Mix"}
             </h1>
-            <p className="text-[15px] text-crate-text-secondary mt-1">DJ Kenta</p>
+            <p className="text-[15px] text-crate-text-secondary mt-1">{program?.broadcaster || "DJ Kenta"}</p>
+            {program?.genre && (
+              <span className="inline-block text-[11px] text-crate-accent bg-crate-accent/10 px-2 py-0.5 rounded mt-1">
+                {program.genre}
+              </span>
+            )}
           </div>
           {/* Favorite */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-crate-accent shrink-0 mt-1">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
-          </svg>
+          <button
+            className={`shrink-0 mt-1 transition-transform ${heartAnimating ? 'animate-heart-beat' : ''}`}
+            onClick={() => {
+              if (program) {
+                setHeartAnimating(true);
+                toggleFavorite(program.id);
+                setTimeout(() => setHeartAnimating(false), 300);
+              }
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={fav ? "text-crate-accent" : "text-crate-text-secondary"}>
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill={fav ? "currentColor" : "none"} stroke={fav ? "none" : "currentColor"} strokeWidth="2"/>
+            </svg>
+          </button>
         </div>
 
         {/* Waveform Progress Bar */}
         <div className="w-full mt-6">
           <div className="flex items-end justify-center gap-[2px] h-[36px]">
             {waveformData.map((h, i) => {
-              const isPlayed = i < (progressPosition / 100) * waveformData.length;
+              const isPlayed = i < (playbackProgress / 100) * waveformData.length;
               return (
                 <div
                   key={i}
@@ -97,11 +119,17 @@ export default function NowPlayingFullScreen() {
           </button>
 
           {/* Play/Pause (large) */}
-          <button className="w-[64px] h-[64px] rounded-full bg-crate-accent flex items-center justify-center shadow-[0_0_30px_rgba(124,131,255,0.35)]">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
+          <button className="w-[64px] h-[64px] rounded-full bg-crate-accent flex items-center justify-center shadow-[0_0_30px_rgba(124,131,255,0.35)]" onClick={() => setIsPlaying(!isPlaying)}>
+            {isPlaying ? (
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+                <rect x="6" y="4" width="4" height="16" rx="1"/>
+                <rect x="14" y="4" width="4" height="16" rx="1"/>
+              </svg>
+            ) : (
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+                <polygon points="6,3 20,12 6,21" />
+              </svg>
+            )}
           </button>
 
           {/* Forward 30s */}

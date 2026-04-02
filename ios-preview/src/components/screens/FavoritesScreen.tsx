@@ -1,15 +1,13 @@
 "use client";
+import { useState } from "react";
 import { useNavigation } from "../AppNavigator";
-
-const programs = [
-  { id: 1, title: "Late Night Chill Mix", broadcaster: "DJ Kenta", duration: "32:15", genre: "Lo-Fi" },
-  { id: 2, title: "Morning Jazz Radio", broadcaster: "Yuki", duration: "45:00", genre: "Jazz" },
-  { id: 3, title: "Tokyo Sunset Beats", broadcaster: "Ryo", duration: "28:30", genre: "Electronic" },
-  { id: 4, title: "Deep Focus Session", broadcaster: "Mika", duration: "55:00", genre: "Ambient" },
-];
+import { useStore } from "../../lib/store";
 
 export default function FavoritesScreen() {
   const { pop, push } = useNavigation();
+  const { getFavoritePrograms, toggleFavorite, isFavorite, setCurrentProgram } = useStore();
+  const programs = getFavoritePrograms();
+  const [animatingId, setAnimatingId] = useState<string | null>(null);
   return (
     <div className="flex flex-col h-full bg-crate-void">
       {/* Nav */}
@@ -29,7 +27,7 @@ export default function FavoritesScreen() {
       <div className="flex-1 overflow-y-auto phone-scroll px-4">
         {/* Count */}
         <div className="flex justify-end mb-3">
-          <span className="text-[12px] font-mono text-crate-text-muted">12 shows</span>
+          <span className="text-[12px] font-mono text-crate-text-muted">{programs.length} shows</span>
         </div>
 
         {/* Program Cards */}
@@ -38,7 +36,7 @@ export default function FavoritesScreen() {
             <div
               key={p.id}
               className="relative flex items-center gap-3 p-3 bg-crate-surface border border-crate-border rounded-[10px] overflow-hidden cursor-pointer"
-              onClick={() => push("program")}
+              onClick={() => { setCurrentProgram(p.id); push("program"); }}
             >
               {/* Swipe hint on first card */}
               {i === 0 && (
@@ -59,9 +57,17 @@ export default function FavoritesScreen() {
                   <span className="text-[11px] text-crate-accent bg-crate-accent/10 px-1.5 py-0.5 rounded">{p.genre}</span>
                 </div>
               </div>
-              <button className="w-[36px] h-[36px] rounded-full bg-crate-accent flex items-center justify-center shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                  <polygon points="6,3 20,12 6,21" />
+              <button
+                className={`w-[36px] h-[36px] rounded-full flex items-center justify-center shrink-0 transition-transform ${animatingId === p.id ? 'animate-heart-beat' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAnimatingId(p.id);
+                  toggleFavorite(p.id);
+                  setTimeout(() => setAnimatingId(null), 300);
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-crate-accent">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
                 </svg>
               </button>
             </div>
